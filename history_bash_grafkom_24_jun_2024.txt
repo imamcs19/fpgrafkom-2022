@@ -1,0 +1,32 @@
+    1  ls
+    2  wget
+    3  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1qiXkQZZrYjuIZ-49mOHa_VxsczkB1SNS' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1qiXkQZZrYjuIZ-49mOHa_VxsczkB1SNS" -O 'webapp.tar' && rm -rf /tmp/cookies.txt
+    4  ls
+    5  tar -xf *.tar -C ./
+    6  cp -r ./home/imamcs/mysite/templates /home/grafkomku/mysite/
+    7  cp -r ./home/imamcs/mysite/static /home/grafkomku/mysite/
+    8
+    9
+   10
+   11
+   12  clear
+   13  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=10Mdy3u_sc2cxZprw6Wp57Lj4JSO4gNSE' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=10Mdy3u_sc2cxZprw6Wp57Lj4JSO4gNSE" -O 'data.db' && rm -rf /tmp/cookies.txt
+   14  cp ./data.db /home/grafkomku/mysite/
+   15  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1pwz1xwioyQ0LmnN5_Y_exw9-fl5JiUGL' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1pwz1xwioyQ0LmnN5_Y_exw9-fl5JiUGL" -O 'gl-matrix-min.js' && rm -rf /tmp/cookies.txt
+   16  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1GEsaQsTm-nOjf0DnCl8vsDSgUX4AA_98' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1GEsaQsTm-nOjf0DnCl8vsDSgUX4AA_98" -O 'angular.min.js' && rm -rf /tmp/cookies.txt
+   17  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1GJk6A40Q0M9B6DPqyeNaoZkEg4-EhKxE' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1GJk6A40Q0M9B6DPqyeNaoZkEg4-EhKxE" -O 'vertexBufferObject.js' && rm -rf /tmp/cookies.txt
+   18  ls *.js
+   19  cp ./*.js /home/grafkomku/mysite/static/js/mylib_text_render/
+   20  python -V
+   21
+   22  pip install flask_cors
+   23
+   24
+   25  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=14FkhCSXUAISw7FqA1h0-LILrsLpQNUX9' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=14FkhCSXUAISw7FqA1h0-LILrsLpQNUX9" -O 'login.html' && rm -rf /tmp/cookies.txt
+   26  cp ./login.html /home/grafkomku/mysite/templates/
+   27  clear
+   28  cp ./style.css /home/grafkomku/mysite/static/css/
+   29  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=17DFQON5DKvnvb46sxDtaJMKo8WMy0vUX' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=17DFQON5DKvnvb46sxDtaJMKo8WMy0vUX" -O 'style.css' && rm -rf /tmp/cookies.txt
+   30  cp ./style.css /home/grafkomku/mysite/static/css/
+   31  tar -cvf mysite.tar /home/grafkomku/mysite/
+   32  history > history_bash_grafkom_24_jun_2024.txt
