@@ -8,7 +8,8 @@ Oleh: Imam Cholissodin, S.Si., M.Kom. | email: imamcs@ub.ac.id
 [>> Link Demo fpgrafkom-2022 | Buat Objek Titik Membentuk Segitiga <<](https://grafkomku.pythonanywhere.com/titik2)
 
 [>> Link Demo fpgrafkom-2022 | Buat Objek Titik Membentuk Lingkaran <<](https://grafkomku.pythonanywhere.com/titik3)
-Jika lingkaran terlihat seperti ellips atau bukan lingkaran, karena efek responsive web-nya.
+
+*Jika lingkaran terlihat seperti ellips atau bukan lingkaran, karena efek responsive web-nya.
 
 ![image](https://raw.githubusercontent.com/imamcs19/fpasd-2022/main/fppredict.png)
 
