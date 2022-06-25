@@ -19,7 +19,8 @@ Oleh: Imam Cholissodin, S.Si., M.Kom. | email: imamcs@ub.ac.id
 
 [>> Link Demo fpgrafkom-2022 | Buat Objek Segiempat (Quad) + Warna <<](https://grafkomku.pythonanywhere.com/quadcolor)
 
-![image](https://raw.githubusercontent.com/imamcs19/fpgrafkom-2022/main/login%20plus%20render%20teks.png)
+![image](https://raw.githubusercontent.com/imamcs19/fpgrafkom-2022/main/login%20plus%20demos.gif)
+
 
 Big Thanks to PythonAnywhere & for all Ref. Semoga Bermanfaat dan Sukses untuk Semua. :D
 
