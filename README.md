@@ -11,6 +11,8 @@ Oleh: Imam Cholissodin, S.Si., M.Kom. | email: imamcs@ub.ac.id
 
 *Jika lingkaran terlihat seperti ellips atau bukan lingkaran, karena efek responsive web-nya.
 
+[>> Link Demo fpgrafkom-2022 | Buat Objek Segitiga <<](https://grafkomku.pythonanywhere.com/segitiga)
+
 ![image](https://raw.githubusercontent.com/imamcs19/fpgrafkom-2022/main/login%20plus%20render%20teks.png)
 
 Big Thanks to PythonAnywhere. Semoga Bermanfaat dan Sukses untuk Semua. :D
