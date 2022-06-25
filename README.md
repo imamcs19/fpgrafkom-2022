@@ -21,11 +21,7 @@ Oleh: Imam Cholissodin, S.Si., M.Kom. | email: imamcs@ub.ac.id
 
 ![image](https://raw.githubusercontent.com/imamcs19/fpgrafkom-2022/main/login%20plus%20render%20teks.png)
 
-Big Thanks to PythonAnywhere. Semoga Bermanfaat dan Sukses untuk Semua. :D
-
-
-
-Big Thanks for all Ref.:D
+Big Thanks to PythonAnywhere & for all Ref. Semoga Bermanfaat dan Sukses untuk Semua. :D
 
 [1]	WebGL Tutorial [Internet]. [cited 2022 Jun 23]. Available from: https://www.tutorialspoint.com/webgl/index.htm
 
