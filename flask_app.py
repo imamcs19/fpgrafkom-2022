@@ -83,6 +83,13 @@ def draw_segitiga():
 def draw_segiempat():
     return render_template('draw_segiempat.html')
 
+# contoh membuat objek segiempat berwarna
+@app.route('/quadcolor')
+def draw_quadcolor():
+    return render_template('draw_quadcolor.html')
+
+draw_quadcolor.html
+
 @app.route('/menu')
 def menugrafkom():
     return render_template('launchpad_grafkom.html')
@@ -1080,3 +1087,4 @@ if __name__ == '__main__':
              # Runtime > Manage Sessions > Terminate Other Sessions
   # app.run(host='0.0.0.0', port=5004)  # If address is in use, may need to terminate other sessions:
              # Runtime > Manage Sessions > Terminate Other Sessions
+
