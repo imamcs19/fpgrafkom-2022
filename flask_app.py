@@ -88,6 +88,17 @@ def draw_segiempat():
 def draw_quadcolor():
     return render_template('draw_quadcolor.html')
 
+# contoh membuat objek segitiga berotasi
+@app.route('/rotasi')
+def draw_rotasisegitiga():
+    return render_template('draw_rotasisegitiga.html')
+
+# contoh membuat objek kubus berotasi
+@app.route('/rotasicube')
+def draw_rotasicube():
+    return render_template('draw_rotasicube.html')
+
+
 @app.route('/menu')
 def menugrafkom():
     return render_template('launchpad_grafkom.html')
@@ -1085,3 +1096,4 @@ if __name__ == '__main__':
              # Runtime > Manage Sessions > Terminate Other Sessions
   # app.run(host='0.0.0.0', port=5004)  # If address is in use, may need to terminate other sessions:
              # Runtime > Manage Sessions > Terminate Other Sessions
+
