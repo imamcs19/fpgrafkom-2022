@@ -23,7 +23,10 @@ Oleh: Imam Cholissodin, S.Si., M.Kom. | email: imamcs@ub.ac.id
 
 Big Thanks to PythonAnywhere. Semoga Bermanfaat dan Sukses untuk Semua. :D
 
-Ref:
+
+
+Big Thanks for all Ref.:D
+
 [1]	WebGL Tutorial [Internet]. [cited 2022 Jun 23]. Available from: https://www.tutorialspoint.com/webgl/index.htm
 
 [2]	Chitnis D. WebGL-plot-examples [Internet]. 2022 [cited 2022 Jun 23]. Available from: https://github.com/danchitnis/webgl-plot-examples
