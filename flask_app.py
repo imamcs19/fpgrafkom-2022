@@ -78,6 +78,11 @@ def draw_garis():
 def draw_segitiga():
     return render_template('draw_segitiga.html')
 
+# contoh membuat objek segiempat
+@app.route('/segiempat')
+def draw_segiempat():
+    return render_template('draw_segiempat.html')
+
 @app.route('/menu')
 def menugrafkom():
     return render_template('launchpad_grafkom.html')
