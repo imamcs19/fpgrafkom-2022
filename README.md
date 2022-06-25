@@ -19,6 +19,8 @@ Oleh: Imam Cholissodin, S.Si., M.Kom. | email: imamcs@ub.ac.id
 
 [>> Link Demo fpgrafkom-2022 | Buat Objek Segiempat (Quad) + Warna <<](https://grafkomku.pythonanywhere.com/quadcolor)
 
+[>> Link Demo fpgrafkom-2022 | Rotasi Segitiga + Warna <<](https://grafkomku.pythonanywhere.com/rotasi)
+
 ![image](https://raw.githubusercontent.com/imamcs19/fpgrafkom-2022/main/login%20plus%20demos.gif)
 
 
