@@ -1,6 +1,6 @@
     1  ls
     2  wget
-    3  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1qiXkQZZrYjuIZ-49mOHa_VxsczkB1SNS' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1qiXkQZZrYjuIZ-49mOHa_VxsczkB1SNS" -O 'webapp.tar' && rm -rf /tmp/cookies.txt
+    3  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1C1NsNqS0X6dLTFkel0OMfd5hxLq0CbEj' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1C1NsNqS0X6dLTFkel0OMfd5hxLq0CbEj" -O 'webapp.tar' && rm -rf /tmp/cookies.txt
     4  ls
     5  tar -xf *.tar -C ./
     6  cp -r ./home/imamcs/mysite/templates /home/grafkomku/mysite/
