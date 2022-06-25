@@ -98,6 +98,15 @@ def draw_rotasisegitiga():
 def draw_rotasicube():
     return render_template('draw_rotasicube.html')
 
+# contoh membuat multi objek
+@app.route('/multiobjek')
+def draw_multiobjek():
+    return render_template('draw_multiobjek.html')
+
+# contoh membuat multi objek
+@app.route('/multiobjek2')
+def draw_multiobjek2():
+    return render_template('draw_multiobjek2.html')
 
 @app.route('/menu')
 def menugrafkom():
