@@ -54,5 +54,7 @@ Big Thanks to PythonAnywhere & for all Ref. Semoga Bermanfaat dan Sukses untuk S
 
 [11]	Cholissodin I, Soebroto A. Buku Ajar AI, Machine Learning & Deep Learning. 2019.
 
-[12]	..
+[12]	https://math.hws.edu/eck/cs424/ & https://math.hws.edu/graphicsbook/demos/
+
+[13] ..
 
