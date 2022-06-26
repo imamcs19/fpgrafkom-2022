@@ -56,5 +56,7 @@ Big Thanks to PythonAnywhere & for all Ref. Semoga Bermanfaat dan Sukses untuk S
 
 [12]	https://math.hws.edu/eck/cs424/ & https://math.hws.edu/graphicsbook/demos/
 
-[13] ..
+[13] WebGL Programming Guide [Internet]. [cited 2022 Jun 26]. Available from: https://sites.google.com/site/webglbook/home
+
+[14] ..
 
