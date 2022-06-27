@@ -119,6 +119,11 @@ def draw_view():
 def draw_camera():
     return render_template('LookAt_sbg_camera.html')
 
+# contoh membuat texture mapping
+@app.route('/map')
+def draw_map():
+    return render_template('draw_texturemap.html')
+
 
 @app.route('/menu')
 def menugrafkom():
