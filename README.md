@@ -54,5 +54,9 @@ Big Thanks to PythonAnywhere & for all Ref. Semoga Bermanfaat dan Sukses untuk S
 
 [11]	Cholissodin I, Soebroto A. Buku Ajar AI, Machine Learning & Deep Learning. 2019.
 
-[12]	..
+[12]	https://math.hws.edu/eck/cs424/ & https://math.hws.edu/graphicsbook/demos/
+
+[13] WebGL Programming Guide [Internet]. [cited 2022 Jun 26]. Available from: https://sites.google.com/site/webglbook/home
+
+[14] ..
 
