@@ -1,0 +1,324 @@
+{% extends "extends/base.html" %}
+{% block title %}
+    <title>Web Data App</title>
+{% endblock title %}
+{{ self.title() }}
+    Home
+{{ self.title() }}
+<button onclick="window.location.href='/'" class="btn btn-outline btn-rounded btn-info">
+    <i class="ti-arrow-left m-l-5"></i>
+    <span>Back Home</span>
+</button> Project 1
+
+{{ self.title() }}
+    Project 1
+
+{% block content %}
+
+  <!--- Cara memanggil Lib. helper WebGL dari file *.js --->
+  <!--                                                  -->
+  <!--Ref. -->
+  <!--[0] https://math.hws.edu/graphicsbook/demos/c3/rotation-axis.html -->
+  <!--                                                                  -->
+  <!-- Remodified by Imam Cholissodin | Filkom UB                       -->
+  <!-- Tgl 20 Juni – 15 Juli 2022                                       -->
+  <!---------------------------------------------------------------------->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_text_render/gl-matrix-min.js') }}"></script>-->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_text_render/angular.min.js') }}"></script>-->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_text_render/vertexBufferObject.js') }}"></script>-->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_multiobjek/MV.js') }}"></script>-->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_multiobjek/InitShaders.js') }}"></script>-->
+
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_camera/demo-core.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_camera/glsim.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_camera/basic-object-models-IFS.js') }}"></script>
+
+  <script>
+
+  var cylinder, cone;
+    var bigCylinder, bigCone;
+
+    var angle = 0;
+    var axisX = 0, axisY = 1, axisZ = 0;
+
+    var animating = false;
+
+    var camera;
+
+    function square(size, r, g, b) {
+        size = size/2;
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [r, g, b, 0.8]);
+        glTranslatef(0,0,size);    // Move square size units forward.
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex2f(-size,-size);    // Draw the square (before the
+        glVertex2f(size,-size);     //   the translation is applied)
+        glVertex2f(size,size);      //   on the xy-plane, with its center
+        glVertex2f(-size,size);     //   at (0,0,0).
+        glEnd();
+    }
+
+    function cube(size) {
+        glPushMatrix();
+        square(size,1,0,0);        // front face is red
+        glPopMatrix();
+
+        glPushMatrix();
+        glRotatef(180,0,1,0); // rotate square to back face
+        square(size,0,1,1);        // back face is cyan
+        glPopMatrix();
+
+        glPushMatrix();
+        glRotatef(-90,0,1,0); // rotate square to left face
+        square(size,1,0,1);        // left face is magenat
+        glPopMatrix();
+
+        glPushMatrix();
+        glRotatef(90,0,1,0); // rotate square to right face
+        square(size,0,0.7,0);       // right face is green
+        glPopMatrix();
+
+        glPushMatrix();
+        glRotatef(-90,1,0,0); // rotate square to top face
+        square(size,0,0,1);        // top face is blue
+        glPopMatrix();
+
+        glPushMatrix();
+        glRotatef(90,1,0,0); // rotate square to bottom face
+        square(size,1,1,0);        // bottom face is yellow
+        glPopMatrix();
+    }
+
+    function draw() {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glMateriali(GL_FRONT_AND_BACK, GL_SHININESS, 40);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.4,0.4,0.4,1]);
+
+        camera.apply();
+
+        glPushMatrix();
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [1,0,0,1]);
+        glTranslated(0,0,5);
+        glsimDrawModel(cylinder);
+        glTranslated(0,0,6);
+        glsimDrawModel(cone);
+        glPopMatrix();
+
+        glPushMatrix();
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [0,.8,0,1]);
+        glRotated(90,0,1,0);
+        glTranslated(0,0,5);
+        glsimDrawModel(cylinder);
+        glTranslated(0,0,6);
+        glsimDrawModel(cone);
+        glPopMatrix();
+
+        glPushMatrix();
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [.5,.5,1,1]);
+        glRotated(-90,1,0,0);
+        glTranslated(0,0,5);
+        glsimDrawModel(cylinder);
+        glTranslated(0,0,6);
+        glsimDrawModel(cone);
+        glPopMatrix();
+
+        glPushMatrix();
+        if (axisX != 0 || axisY != 0) {
+    		var a = -axisY;
+    		var b = axisX;
+    		var len = Math.sqrt(axisX*axisX + axisY*axisY + axisZ*axisZ);
+    		var cos = axisZ/len;
+    		var theta = Math.acos(cos);
+    		theta = theta / Math.PI * 180;
+            glRotatef(theta, a, b, 0);
+        }
+        else if ( (axisZ < 0)) {
+    		glRotatef(180,0,1,0);
+        }
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [1,1,1,1]);
+        glTranslated(0,0,-2);
+        glsimDrawModel(bigCylinder);
+        glTranslated(0,0,13);
+        glsimDrawModel(bigCone);
+        glPopMatrix();
+
+        glPushMatrix();
+        glRotatef(angle, axisX, axisY, axisZ);
+        cube(7);
+        glPopMatrix();
+
+    }
+
+    function frame() {
+        if (animating) {
+    		angle += 1;
+    		if (angle > 360) {
+    			angle = angle-360;
+    		}
+    		draw();
+    		requestAnimationFrame(frame);
+    	}
+    }
+
+    function forceAnimation() {
+        if (!animating) {
+    		document.getElementById("animate").checked = true;
+    		doAnimationCheckbox();
+    	}
+    }
+
+    function doAnimationCheckbox() {
+        var run = document.getElementById("animate").checked
+    	if (run != animating) {
+    		animating = run;
+    		frame();
+    	}
+    }
+
+    function error(message) {
+        var el = document.getElementById("headline");
+        if (message) {
+    		el.style.color = "red";
+    		el.innerHTML = message;
+        }
+        else {
+    		el.style.color = "black";
+    		el.innerHTML = "LookAt(mata_x, mata_y, mata_z, lihat_x, lihat_y, lihat_z, atas_x, atas_y, atas_z) | lookAt( 15,12,30, 0,0,0, 0,1,0 )";
+        }
+    }
+
+    function setAxis(x,y,z) {
+        error(null);
+        axisX = x;
+        axisY = y;
+        axisZ = z;
+        document.getElementById("x").value = "" + axisX;
+        document.getElementById("y").value = "" + axisY;
+        document.getElementById("z").value = "" + axisZ;
+        angle = 0;
+    	forceAnimation();
+    }
+
+    function reset() {
+        error(null);
+        axisX = 0;
+        axisY = 1;
+        axisZ = 0;
+        document.getElementById("x").value = "0";
+        document.getElementById("y").value = "1";
+        document.getElementById("z").value = "0";
+        angle = 0;
+        camera.lookAt( 15,12,30, 0,0,0, 0,1,0 );
+    	forceAnimation();
+    }
+
+    function setFromInputs() {
+        var a = Number(document.getElementById("x").value);
+        var b = Number(document.getElementById("y").value);
+        var c = Number(document.getElementById("z").value);
+        if (isNaN(a)) {
+    		error("The x-value is not a legal number!");
+    		return;
+        }
+        if (isNaN(b)) {
+    		error("The y-value is not a legal number!");
+    		return;
+        }
+        if (isNaN(c)) {
+    		error("The z-value is not a legal number!");
+    		return;
+        }
+        if (a*a+b*b+c*c < 0.0000001) {
+    		error("Axis vector is too close to zero!");
+    		return;
+        }
+        axisX = a;
+        axisY = b;
+        axisZ = c;
+        angle = 0;
+        document.getElementById("x").value = "" + axisX;
+        document.getElementById("y").value = "" + axisY;
+        document.getElementById("z").value = "" + axisZ;
+    	forceAnimation();
+    }
+
+    function initGL() {
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, [1,1,1,1]);
+        glEnable(GL_NORMALIZE);
+        glEnable(GL_DEPTH_TEST);
+        glMatrixMode(GL_PROJECTION);
+        gluPerspective( 50, 1, 10, 50); // fovy, aspect, near, far
+        glMatrixMode(GL_MODELVIEW);
+        glClearColor(0,0,0,1);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
+    }
+
+    function init() {
+        try {
+            glsimUse("maincanvas");
+        }
+        catch (e) {
+            document.getElementById("canvas-holder").innerHTML="<p><b>Sorry, an error occurred:<br>" +
+                    e + "</b></p>";
+    		return;
+        }
+        initGL();
+        document.getElementById("animate").checked = false;
+    	document.getElementById("animate").onchange = doAnimationCheckbox;
+        document.getElementById("x").value = "0";
+        document.getElementById("y").value = "1";
+        document.getElementById("z").value = "0";
+        cylinder = uvCylinder(0.3,10);
+        cone = uvCone(0.5,3);
+        bigCylinder = uvCylinder(0.5,24);
+        bigCone = uvCone(0.8,3.2);
+        camera = new Camera();
+
+    	// gluLookAt(mata_x, mata_y, mata_z, lihat_x, lihat_y, lihat_z, atas_x, atas_y, atas_z)
+        camera.lookAt( 15,12,30, 0,0,0, 0,1,0 );
+        camera.setScale(14);
+        camera.installTrackball(function() {
+    		if (!animating) {
+    			draw();
+    		}
+    	});
+        draw();
+    }
+
+    </script>
+    </head>
+    <body onload="init()">
+
+    <div id="content">
+
+    <h3 id="headline" style="color: black;">LookAt(mata_x, mata_y, mata_z, lihat_x, lihat_y, lihat_z, atas_x, atas_y, atas_z) | lookAt( 15,12,30, 0,0,0, 0,1,0 )</h3>
+
+    <div id="canvas-holder">
+    <canvas id="maincanvas" width="300" height="300"></canvas>
+    </div>
+
+    </div>
+
+    <div style="float:left;">
+    <h3>Rotation Axis:</h3>
+    <p>x = <input id="x" type="text" size="6" value="0"></p>
+    <p>y = <input id="y" type="text" size="6" value="1"></p>
+    <p>z = <input id="z" type="text" size="6" value="0"></p>
+    <p><button onclick="setFromInputs()">Set</button>
+    <button onclick="reset()">Reset</button><br>
+    <button onclick="setAxis(1,0,0)">+X</button>
+    <button onclick="setAxis(0,1,0)">+Y</button>
+    <button onclick="setAxis(0,0,1)">+Z</button><br>
+    <button onclick="setAxis(-1,0,0)">-X</button>
+    <button onclick="setAxis(0,-1,0)">-Y</button>
+    <button onclick="setAxis(0,0,-1)">-Z</button>
+    </p>
+    <p style="margin-bottom: 0"><label><input type="checkbox" id="animate" checked="checked"> <b>Animate</b></label></p>
+
+    </div>
+
+{% endblock content %}
