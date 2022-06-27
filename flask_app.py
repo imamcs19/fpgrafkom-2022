@@ -124,6 +124,11 @@ def draw_camera():
 def draw_map():
     return render_template('draw_texturemap.html')
 
+# contoh membuat texture mapping dan pencerminan
+@app.route('/map2')
+def draw_map2():
+    return render_template('draw_texturemap_n_reflection.html')
+
 
 @app.route('/menu')
 def menugrafkom():
