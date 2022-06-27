@@ -108,6 +108,18 @@ def draw_multiobjek():
 def draw_multiobjek2():
     return render_template('draw_multiobjek2.html')
 
+# contoh membuat viewing dengan perspektif
+@app.route('/view')
+def draw_view():
+    return render_template('frustum_sbg_Perspective_viewing.html')
+
+
+# contoh membuat viewing dengan LookAt sebagai camera
+@app.route('/camera')
+def draw_camera():
+    return render_template('LookAt_sbg_camera.html')
+
+
 @app.route('/menu')
 def menugrafkom():
     return render_template('launchpad_grafkom.html')
