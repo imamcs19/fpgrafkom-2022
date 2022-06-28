@@ -108,6 +108,11 @@ def draw_multiobjek():
 def draw_multiobjek2():
     return render_template('draw_multiobjek2.html')
 
+# contoh membuat multi objek untuk contoh membuat kincir angin sederhana
+@app.route('/multiobjek3')
+def draw_multiobjek3():
+    return render_template('draw_multiobjek3.html')
+
 # contoh membuat viewing dengan perspektif
 @app.route('/view')
 def draw_view():
