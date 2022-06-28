@@ -21,10 +21,20 @@
   <!--[0] https://math.hws.edu/graphicsbook/demos/c5/mesh-animation.html    -->
   <!--[1] https://math.hws.edu/graphicsbook/demos/c5/reflection-demo.html   -->
   <!--[2] https://math.hws.edu/graphicsbook/demos/c7/cube-camera-demo.html  -->
+  <!-- skybox ub                                                            -->
+  <!--[3] https://www.google.com/maps/uv?pb=!1s0x2e78827a0c9e3f0b%3A0x279188ffd5e2b742!3m1!7e115!4shttps%3A%2F%2Flh5.googleusercontent.com%2Fp%2FAF1QipOq7yRj747wnbpGKTD3nKw9TaPhdPK2hfVyh_dc%3Dw116-h77-n-k-no!5sGedung%20A%20Fakultas%20Ilmu%20Komputer%20Universitas%20Brawijaya%20-%20Penelusuran%20Google!15sCgIgARICCAI&imagekey=!1e2!2sGUeqINLp_Y1j4qd6k6w1BA&hl=id&sa=X&ved=2ahUKEwiW4_323874AhX2SmwGHWXNAOUQ7ZgBKAF6BAgHEAM -->
+
+  <!-- install converter link dari google map menjadi foto panorama -->
+  <!--[4] https://svd360.istreetview.com/ -->
+
+  <!-- lalu untuk convert secara online panorama menjadi 6 tile => negx, posx, negy, posy, negz, posz -->
+  <!--[5] https://jaxry.github.io/panorama-to-cubemap/ -->
   <!--                                                                      -->
   <!-- Remodified by Imam Cholissodin | Filkom UB                           -->
   <!-- Tgl 20 Juni – 15 Juli 2022                                           -->
   <!-------------------------------------------------------------------------->
+
+  <link rel="stylesheet" href="{{ url_for('static', filename = 'css/cubemap/demo.css') }}">
 
   <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap2/demo-core.js') }}"></script>
   <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap2/three.min.js') }}"></script>-->
@@ -60,7 +70,7 @@ var controls;  // an OrbitControls object for rotating the view.
 
 var skyboxTexturePaths = [  // paths to folders containing available cubemap textures.
     "/static/img/cubemap/pantai/",     //    Note that files are aleays named posx.jpg, negx.jpg, etc.
-    "/static/img/cubemap/taman/"
+    "/static/img/cubemap/ub/"
 ];
 
 var gltfModelURL = [  // available JSON model files
@@ -340,7 +350,7 @@ function init() {
 <div id="tools">
 <p style="margin-top:0"><b>Skybox:</b><br>
     <label><input type=radio name="pickskybox" id=s1 onchange="createSkybox(0)">Pantai</label><br>
-    <label><input type=radio name="pickskybox" onchange="createSkybox(1)">Taman</label>
+    <label><input type=radio name="pickskybox" onchange="createSkybox(1)">Ub</label>
 </p>
 <p style="margin-top:20px"><b>Object:</b><br>
     <label><input type=radio name="pickmodel" id=m1 onchange="installGLTFModel(0)">Arrowhead</label><br>
