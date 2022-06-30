@@ -134,6 +134,16 @@ def draw_map():
 def draw_map2():
     return render_template('draw_texturemap_n_reflection.html')
 
+# contoh membuat texture mapping dan pencerminan
+@app.route('/map4')
+def draw_map4():
+    return render_template('draw_texturemap_from_bufferObject.html')
+
+# contoh membuat blending
+@app.route('/blending')
+def draw_blending():
+    return render_template('draw_blending.html')
+
 
 @app.route('/menu')
 def menugrafkom():
@@ -1132,4 +1142,3 @@ if __name__ == '__main__':
              # Runtime > Manage Sessions > Terminate Other Sessions
   # app.run(host='0.0.0.0', port=5004)  # If address is in use, may need to terminate other sessions:
              # Runtime > Manage Sessions > Terminate Other Sessions
-
