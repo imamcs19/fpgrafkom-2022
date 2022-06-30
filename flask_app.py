@@ -144,6 +144,15 @@ def draw_map4():
 def draw_blending():
     return render_template('draw_blending.html')
 
+# contoh membuat blending stamper
+@app.route('/blending2')
+def draw_blending2():
+    return render_template('draw_blending_stamper.html')
+
+# contoh membuat blending untuk antialiasing
+@app.route('/antialiasing')
+def draw_antialiasing():
+    return render_template('draw_antialiasing.html')
 
 @app.route('/menu')
 def menugrafkom():
