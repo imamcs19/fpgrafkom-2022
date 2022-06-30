@@ -1,0 +1,299 @@
+{% extends "extends/base.html" %}
+{% block title %}
+    <title>Web Data App</title>
+{% endblock title %}
+{{ self.title() }}
+    Home
+{{ self.title() }}
+<button onclick="window.location.href='/'" class="btn btn-outline btn-rounded btn-info">
+    <i class="ti-arrow-left m-l-5"></i>
+    <span>Back Home</span>
+</button> Project 1
+
+{{ self.title() }}
+    Project 1
+
+{% block content %}
+
+  <!--- Cara memanggil Lib. helper WebGL dari file *.js                        -->
+  <!--                                                                         -->
+  <!--Ref.                                                                     -->
+  <!--[0] https://math.hws.edu/eck/cs424/s12/lab4/lab4-files/points.html       -->
+  <!--                                                                         -->
+  <!-- Remodified by Imam Cholissodin | Filkom UB                              -->
+  <!-- Tgl 20 Juni – 15 Juli 2022                                              -->
+  <!----------------------------------------------------------------------------->
+
+    <!-- Include shader source as script elements with a type that
+     will cause the browser to ignore the script.  (This follows
+     examples on learningwebgl.com.)  The content of the shader
+     scipts is extracted using a function getElementText()
+     that is defined in glutil2d.js. -->
+<script type="x-shader/x-vertex" id="vshader">
+     attribute vec2 vertexCoords;
+     uniform mat3 coordinateTransform;
+     uniform float pointSize;
+     void main() {
+        vec3 transformedCoords = coordinateTransform * vec3(vertexCoords, 1.0);
+        gl_Position = vec4(transformedCoords.xy, 0.0, 1.0);
+        gl_PointSize = pointSize;
+     }
+</script>
+<script type="x-shader/x-fragment" id="fshader">
+     precision mediump float;
+     uniform bool antialiased;
+     void main() {
+        float dist = distance( gl_PointCoord, vec2(0.5) );
+        if (!antialiased) {
+            if (dist > 0.5)
+               discard;
+            gl_FragColor = vec4(1,0,0,1);
+        }
+        else {
+            float alpha = 1.0 - smoothstep(0.45,0.5,dist);
+            gl_FragColor = vec4(1,0,0,alpha);
+        }
+     }
+</script>
+
+<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_antialiasing/glutil2d.js') }}"></script>
+
+<script type="text/javascript">
+
+"use strict";
+
+var gl;   // The webgl context, to be initialized in init().
+var prog; // Identifies the webgl program.
+var vertexAttributeBuffer;    // Identifies the databuffer where vertex coords are stored.
+var vertexAttributeLocation;  // Identifies the vertex attribute variable in the shader program.
+var pointSizeUniformLocation; // Identifies the uniform that controls the size of points.
+var antialiasedLoc;           // Identifies the uniform that determines whether points are antialiased.
+var transformUniformLocation; // Identifies the coordinate matrix uniform variable.
+
+var pointRadius;   // The radius of the points; half the point size.  This is the min of 16 and half the maximum point size.
+var pointCt = 50;  // The number of points to drawn.
+var points = new Float32Array(2*pointCt);      // The coordinates of the points, which change from frame to frame.
+var velocities = new Float32Array(2*pointCt);  // The velocities of the points, which determine how far they move in each frame.
+                                               //   Velocities don't change, except they reverse when the ball hits a wall.
+
+
+/**
+ * Draw a rectangle, with object texture coords that will map the entire texture onto
+ * the rectangle (assuming that object texture coordinates are used).
+ */
+function draw() {
+   gl.clearColor(0,0,0,1);
+   gl.clear(gl.COLOR_BUFFER_BIT);
+   gl.bindBuffer(gl.ARRAY_BUFFER,vertexAttributeBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, points, gl.DYNAMIC_DRAW);
+   gl.vertexAttribPointer(vertexAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+   gl.enableVertexAttribArray(vertexAttributeLocation);
+   gl.drawArrays(gl.POINTS, 0, pointCt);
+}
+
+
+/**
+ * Called by init to create the points and their velocities.  The velocities
+ * detrmine how fast the points move during the animation.  (Since the corrdinate
+ * system that is used is standard pixel coordinates, the unit of measure is
+ * pixels, and the velocity is given in pixels per second.)
+ */
+function createPoints() {
+   var width = gl.canvas.width;
+   var height = gl.canvas.height;
+   for (var i = 0; i < pointCt; i++) {
+       points[2*i] = pointRadius + Math.random()*(width-2*pointRadius);
+       points[2*i+1] = pointRadius + Math.random()*(height-2*pointRadius);
+       velocities[2*i] = 30+120*Math.random();
+       if (Math.random() < 0.5)
+          velocities[2*i] = - velocities[2*i];
+       velocities[2*i+1] = 30+120*Math.random();
+       if (Math.random() < 0.5)
+          velocities[2*i+1] = - velocities[2*i+1];
+   }
+}
+
+
+/**
+ * Applies a coordinate transformation to the webgl context by setting the value
+ * of the coordinateTransform uniform in the shader program.  The canvas will display
+ * the region of the xy-plane with x ranging from xmin to xmax and y ranging from ymin
+ * to ymax.  If ignoreAspect is true, these ranges will fill the canvas.  If ignoreAspect
+ * is missing or is false, one of the x or y ranges will be expanded, if necessary,
+ * so that the aspect ratio is preserved.
+ */
+function coordinateTransform(xmin, xmax, ymin, ymax, ignoreAspect) {
+      if ( ! ignoreAspect) {
+         var displayAspect = gl.canvas.height / gl.canvas.width;
+         var requestedAspect = Math.abs((ymax-ymin)/(xmax-xmin));
+         if (displayAspect > requestedAspect) {
+            var excess= (ymax-ymin) * (displayAspect/requestedAspect - 1);
+            ymin -= excess/2;
+            ymax += excess/2;
+         }
+         else if (displayAspect < requestedAspect) {
+            var excess = (xmax-xmin) * (requestedAspect/displayAspect - 1);
+            xmin -= excess/2;
+            xmax += excess/2;
+         }
+      }
+      var coordTrans = [
+           2/(xmax-xmin),            0,                       0,
+           0,                        2/(ymax-ymin),           0,
+           -1 - 2*xmin/(xmax-xmin),  -1 - 2*ymin/(ymax-ymin), 1
+      ];
+      gl.uniformMatrix3fv( transformUniformLocation, false, coordTrans );
+}
+
+
+var animator;
+var lastTime = 0;  // Time of previous call to doFrame();
+
+/**
+ *  Do one frame of an animation, and call setTimeout to schedule the next
+ *  frame.  But don't do anything if animating is false.  In each frame,
+ *  each point's current velocity is added to its current position.  If
+ *  This puts the boundary of the ball of outside the canvas, then the
+ *  velocity is modified to make the ball bounce off the wall.
+ */
+function doFrame(time) {
+   var deltaTime = (time - lastTime)/1000; // Time since last doFrame, in seconds.
+   lastTime = time;
+   for (var j = 0; j < pointCt; j++) {
+      var i = 2*j;
+      points[i] += deltaTime * velocities[i];
+      if (points[i]-pointRadius < 0)
+         velocities[i] = Math.abs(velocities[i]);
+      else if (points[i] + pointRadius > gl.canvas.width)
+         velocities[i] = - Math.abs(velocities[i]);
+      var i = 2*j + 1;
+      points[i] += deltaTime * velocities[i];
+      if (points[i]-pointRadius < 0)
+         velocities[i] = Math.abs(velocities[i]);
+      else if (points[i] + pointRadius > gl.canvas.height)
+         velocities[i] = - Math.abs(velocities[i]);
+   }
+   draw();
+ }
+
+
+/**
+ * Called when user checks/unchecks the "Animating" checkbox.
+ * Responds by starting/stopping the animation.
+ */
+function doAnimate() {
+   if (document.getElementById("animatecheckbox").checked) {
+      animator.start();
+   }
+   else {
+      animator.stop();
+   }
+}
+
+
+/**
+ * This function is called when the user changes the setting of a
+ * checkbox that controlls whether the fragment shader anti-aliases
+ * the boundary of the points that it draws.
+ */
+function doAntialias() {
+   var antialiased = document.getElementById("antialiascheckbox").checked? 1 : 0;
+   gl.uniform1f(antialiasedLoc, antialiased);
+   if (!animator.isAnimating())
+      draw();
+}
+
+
+/**
+ * Initializes the WebGL program including the relevant global variables
+ * and the WebGL state.  Calls draw() to draw the picture for the first time.
+ */
+function init() {
+   document.getElementById("animatecheckbox").checked = false; // (Required for reload in firefox.)
+   document.getElementById("antialiascheckbox").checked = true;
+   try {
+       gl = createWebGLContext("glcanvas");
+       var vertexShaderSource = getElementText("vshader");
+       var fragmentShaderSource = getElementText("fshader");
+       prog = createProgram(gl,vertexShaderSource,fragmentShaderSource);
+       gl.useProgram(prog);
+       vertexAttributeLocation =  gl.getAttribLocation(prog, "vertexCoords");
+       transformUniformLocation =  gl.getUniformLocation(prog, "coordinateTransform");
+       pointSizeUniformLocation = gl.getUniformLocation(prog, "pointSize");
+       antialiasedLoc = gl.getUniformLocation(prog, "antialiased");
+       gl.uniform1f(antialiasedLoc, 1);
+       coordinateTransform(0, gl.canvas.width, gl.canvas.height, 0);  // Let's me use standard pixel coords.
+       vertexAttributeBuffer = gl.createBuffer();
+       var pointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE);
+       pointRadius = Math.min(pointSizeRange[1]/2, 16);
+       gl.uniform1f(pointSizeUniformLocation, pointRadius * 2);
+
+        // Blending colors
+        // ========================================================
+        // Source color 		: (Rs, Gs, Bs, As)
+        // Destination color 	: (Rd, Gd, Bd, Ad)
+        // Source factor 		: (Sr, Sg, Sb, Sa)
+        // Destination factor	: (Dr, Dg, Db, Da)
+        // Blended RGBA = (RsSr+RdDr, GsSg+GdDg, BsSb+BdDb, AsSa+AdDa)
+
+        // Komponen Blending Function
+        // ========================================================
+        // Parameter		             Relevant 	(f(R), f(G), f(B), f(A))
+        // GL_ZERO			             S / D	    (0,0,0,0)
+        // GL_ONE			             S / D	    (1,1,1,1)
+        // GL_SRC_COLOR 	                 D		(RS,GS,BS,AS)
+        // GL_ONE_MINUS_SRC_COLOR            D	    (1,1,1,1)-(RS,GS,BS,AS)
+        // GL_DST_COLOR		             S		    (Rd,Gd,Bd,Ad)
+        // GL_ONE_MINUS_DST_COLOR        S	    	(1,1,1,1)-(Rd,Gd,Bd,Ad)
+        // GL_SRC_ALPHA		             S / D  	(AS, AS, AS,AS)
+        // GL_ONE_MINUS_SRC_ALPHA        S / D  	(1,1,1,1) -(AS, AS, AS,AS)
+        // GL_DST_ALPHA		             S / D	    (Ad, Ad, Ad,Ad)
+        // GL_ONE_MINUS_DST_ALPHA        S / D 	    (1,1,1,1) -(Ad, Ad, Ad,Ad)
+        // GL_SRC_ALPHA_SATURATE	     S	        (f,f,f,1); f = min(As, 1 - Ad)
+
+
+       gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+                             gl.ZERO, gl.ONE );
+       gl.enable(gl.BLEND);
+       createPoints();
+       animator = new Animator(doFrame);
+   }
+   catch (e) {
+      alert("Could not initialize WebGL! " + e);
+      return;
+   }
+   draw();
+}
+
+</script>
+</head>
+<body onload="init()" style="background-color:#DDD">
+
+<h2>Contoh Antialiasing pada Objek Titik</h2>
+
+<!--<p>-->
+<!--This example draws a single WebGL primitive using gl.POINTS.<br>-->
+<!--Each disk is centered at one of the vertices of the primitive.<br>-->
+<!--The vertex shader specifies the size of the point by assigning<br>-->
+<!--to the variable gl_PointSize.  The point is really a square, but<br>-->
+<!--the fragment shader can decide how to color/texture that square.-->
+<!--</p>-->
+
+<!--<noscript><hr><h3>This page requires Javascript and a web browser that supports WebGL</h3><hr></noscript>-->
+
+
+<p><input type="checkbox" id="animatecheckbox" onchange="doAnimate()" checked="checked">
+       <label for="animatecheckbox" style="margin-right:20px"><b>Animate</b></label>
+<input type="checkbox" id="antialiascheckbox" onchange="doAntialias()" style="margin-left:30px" checked="checked">
+       <label for="antialiascheckbox" style="margin-right:20px"><b>Antialiased Point</b></label></p><p>
+
+<canvas id="glcanvas" style="background-color:red" width="700" height="500"></canvas>
+
+
+
+
+
+
+</p>
+
+{% endblock content %}
