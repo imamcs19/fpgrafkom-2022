@@ -154,9 +154,15 @@ def draw_blending2():
 def draw_antialiasing():
     return render_template('draw_antialiasing.html')
 
+# contoh membuat draw_segiempat_bergaris_titik
+@app.route('/quadpoint')
+def draw_quadpoint():
+    return render_template('draw_segiempat_bergaris_titik.html')
+
 @app.route('/menu')
 def menugrafkom():
     return render_template('launchpad_grafkom.html')
+
 
 @app.route("/login",methods=["GET", "POST"])
 def login():
