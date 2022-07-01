@@ -27,9 +27,9 @@ Oleh: Imam Cholissodin, S.Si., M.Kom. | email: imamcs@ub.ac.id
 
 [>> Link Demo fpgrafkom-2022 | Multi Objek 2 Segiempat + 1 Segitiga Berwarna (2 Statis + 1 Berotasi) <<](https://grafkomku.pythonanywhere.com/multiobjek2)
 
-[>> Link Demo fpgrafkom-2022 | Multi Objek untuk Membuat Kincir Angin Sederhana + Animasi) <<](https://grafkomku.pythonanywhere.com/multiobjek3)
+[>> Link Demo fpgrafkom-2022 | Multi Objek Kincir Angin Sederhana + Animasi) <<](https://grafkomku.pythonanywhere.com/multiobjek3)
 
-[>> Link Demo fpgrafkom-2022 | Multi Objek untuk Membuat Kincir Angin Sederhana + Animasi + Texture Mapping) <<](https://grafkomku.pythonanywhere.com/map4)
+[>> Link Demo fpgrafkom-2022 | Multi Objek Kincir Angin Sederhana + Animasi + Texture Mapping) <<](https://grafkomku.pythonanywhere.com/map4)
 
 [>> Link Demo fpgrafkom-2022 | Kunci Jawaban 4.1 (a) Segiempat Bergaris dgn Titik-Titik) <<](https://grafkomku.pythonanywhere.com/quadpoint)
 
