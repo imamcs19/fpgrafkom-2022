@@ -169,6 +169,660 @@ def draw_cahaya():
 def draw_cahaya2():
     return render_template('draw_lighting_n_shading.html')
 
+
+# contoh membuat plot sequence dna sample
+@app.route('/plot_dna')
+def draw_dna():
+    # (Visualiasasi Grafis DNA virus) => 2D/3D,
+    # =============================================
+
+    import os.path
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # contoh load MERS:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-2, Middle East Respiratory Syndrome (MERS)
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_019843.3?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_019843.3?report=genbank
+    # with open('dataset-ncbi/seq MERS.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_mers__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_mers__)
+    # print(len(seq_mers__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_mers__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_mers__ = seq_mers__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_mers__)
+
+    # # upper() sequence
+    # up_seq_mers__ = seq_mers__.upper()
+    # print(up_seq_mers__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-1:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-3, Severe Scute Respiratory Syndrome Coronavirus 1 (SARS-CoV-1)
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=genbank
+    # with open('dataset-ncbi/seq SARS-CoV-1.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_sars_cov_1__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_sars_cov_1__)
+    # print(len(seq_sars_cov_1__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_sars_cov_1__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_1__ = seq_sars_cov_1__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_sars_cov_1__)
+
+    # # upper() sequence
+    # up_seq_sars_cov_1__ = seq_sars_cov_1__.upper()
+    # print(up_seq_sars_cov_1__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-2:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-1, Severe Scute Respiratory Syndrome Coronavirus 2 (SARS-CoV-2)
+    # # sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_045512.2?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_045512.2?report=genbank
+    # with open('dataset-ncbi/seq SARS-CoV-2.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_sars_cov_2__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_sars_cov_2__)
+    # print(len(seq_sars_cov_2__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_sars_cov_2__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_2__ = seq_sars_cov_2__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_sars_cov_2__)
+
+    # # upper() sequence
+    # up_seq_sars_cov_2__ = seq_sars_cov_2__.upper()
+    # print(up_seq_sars_cov_2__)
+    # ---------------------------------------------------------------------------------------------------------
+
+
+    # contoh load Human Genome yang terpapar coronavirus 229:
+    # # ---------------
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_002645.1?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_002645.1?report=genbank
+
+    # print('name: ', 'Human coronavirus 229E, complete genome')
+
+    # # with open('dataset-ncbi/seq Human coronavirus 229E complete genome.txt') as f:
+    # with open(file_path) as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_coronavirus_229e__ = ''.join(my_list)
+    # # print(my_list)
+    # print('seq: ', seq_coronavirus_229e__)
+    # print('len: ', len(seq_coronavirus_229e__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # get_unik_kode = set(seq_coronavirus_229e__)
+    # print('get unik kode: ', get_unik_kode, ' => ', [ord(x)-97 for x in list(get_unik_kode)], end="\n\n")
+
+    # # konversi setiap char kodenya menjadi angka array, misal dgn a-z => 1-26
+    # val_a_z_seq_coronavirus_229e__ = seq2val_space_plus_arr_a_z(seq_coronavirus_229e__)
+    # print('Val seq: ', val_a_z_seq_coronavirus_229e__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-1:
+    # ---------------
+    # Load data Sequence & Pre-Processing
+    # Virus ke-3, Severe Scute Respiratory Syndrome Coronavirus 1 (SARS-CoV-1)
+    # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=fasta
+    #         https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=genbank
+
+    file_path = os.path.join(BASE_DIR, "static/data/sequence DNA sample.txt")
+    # " " => 0, "a" => 1, "c" => 2, "g" => 3, "t" => 4
+    # 1 at ga aa => (0,1,0), (1,4,0), (2,0,0), (3,3,0), (4,1,0), (5,0,0), (6,1,0), (7,1,0)
+    # 7 tg gg tc
+    # 13 ga
+
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA MERS.txt")
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA SARS-CoV-1.txt")
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA SARS-CoV-2.txt")
+
+    with open(file_path) as f:
+      # tanpa disisipkan spasi
+      # my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+      # seq_sars_cov_1__ = ''.join(my_list)
+
+      # dengan disisipkan spasi, tanpa memperhatikan new_line
+      my_list = [' '.join(x.strip().split(" ")[1:]) for x in f]
+      seq_sars_cov_1__ = ''.join(my_list)
+    print(my_list)
+    print(seq_sars_cov_1__)
+    length_seq_sars_cov_1__ = len(seq_sars_cov_1__)
+    print(length_seq_sars_cov_1__)
+
+    #get unik kode atau simbol IUPAC utk nucleotides
+    print(set(seq_sars_cov_1__))
+
+    # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_1__ = seq_sars_cov_1__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    val_seq_sars_cov_1__ = seq_sars_cov_1__.replace(" ","0").replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    print(val_seq_sars_cov_1__)
+
+    # upper() sequence
+    up_seq_sars_cov_1__ = seq_sars_cov_1__.upper()
+    print(up_seq_sars_cov_1__)
+
+    # kode acgt dengan disisipkan spasi
+    string_seq_dna = "\n".join(my_list)
+
+    # tranformasi dari val_seq_sars_cov_1__ menjadi titik koordinat 2D/3d
+    # untuk dibuat visualisasi grafis dengan WebGL
+    # loop_counter_utk_new_line = 0
+    # loop_counter_utk_pembatas_spasi = 0
+    set_jeda_tiap_level_counter_utk_new_line = 0
+    # increment_i_stlh_pembatas_spasi = 0
+    byk_spasi_tiap_baris = 2
+    byk_char_per_selain_spasi = 6
+
+
+    # koordinat_x_y_z = ''
+    # for i in range(length_seq_sars_cov_1__):
+    #     # looping per barisnya, misal dari data diketahui per byk_char_per_selain_spasi
+
+    #     if(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris)==0 and i>0):
+    #         set_jeda_tiap_level_counter_utk_new_line += 7
+
+    #     # koordinat_x = str(i)
+    #     koordinat_x = str(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris))
+    #     # koordinat_y = str(int(val_seq_sars_cov_1__[i]))
+    #     koordinat_y = str(int(val_seq_sars_cov_1__[i]) + set_jeda_tiap_level_counter_utk_new_line)
+    #     koordinat_z = str(0)
+
+    #     if(i==0):
+    #         koordinat_x_y_z += '('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+    #     else:
+    #         koordinat_x_y_z += ',('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+
+    koordinat_x_y_z = ''
+    for i in range(length_seq_sars_cov_1__):
+        # looping per barisnya, misal dari data diketahui per byk_char_per_selain_spasi
+
+        if(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris)==0 and i>0):
+            set_jeda_tiap_level_counter_utk_new_line += 7
+
+        # koordinat_x = str(i)
+        koordinat_x = str(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris))
+        # koordinat_y = str(int(val_seq_sars_cov_1__[i]))
+        koordinat_y = str(int(val_seq_sars_cov_1__[i]) + set_jeda_tiap_level_counter_utk_new_line)
+        koordinat_z = str(0)
+
+        if(i==0):
+            koordinat_x_y_z += koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+        else:
+            koordinat_x_y_z += ','+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+
+
+
+
+    # ---------------------------------------------------------------------------------------------------------
+
+    # cek panjang seq dna
+    # return str(length_seq_sars_cov_1__);
+
+    # menampilkan hasil konversi ke x,y,z
+    # return koordinat_x_y_z;
+
+    # menampilkan hasil konversi dalam bentuk angka
+    # return val_seq_sars_cov_1__;
+
+    # menampilkan kode acgt dengan disisipkan spasi
+    # return seq_sars_cov_1__;
+    # atau
+    # return string_seq_dna;
+
+    mylist_koordinat_x_y_z = koordinat_x_y_z.replace(' ','').split(',')
+
+    # return render_template('draw_dna.html', coords_xyz = list(koordinat_x_y_z))
+    return render_template('draw_dna.html', coords_xyz = mylist_koordinat_x_y_z)
+
+
+# contoh membuat plot sequence dna sequence DNA SARS-CoV-1
+@app.route('/plot_dna2')
+def draw_dna2():
+    # (Visualiasasi Grafis DNA virus) => 2D/3D,
+    # =============================================
+
+    import os.path
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # contoh load MERS:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-2, Middle East Respiratory Syndrome (MERS)
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_019843.3?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_019843.3?report=genbank
+    # with open('dataset-ncbi/seq MERS.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_mers__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_mers__)
+    # print(len(seq_mers__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_mers__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_mers__ = seq_mers__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_mers__)
+
+    # # upper() sequence
+    # up_seq_mers__ = seq_mers__.upper()
+    # print(up_seq_mers__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-1:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-3, Severe Scute Respiratory Syndrome Coronavirus 1 (SARS-CoV-1)
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=genbank
+    # with open('dataset-ncbi/seq SARS-CoV-1.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_sars_cov_1__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_sars_cov_1__)
+    # print(len(seq_sars_cov_1__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_sars_cov_1__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_1__ = seq_sars_cov_1__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_sars_cov_1__)
+
+    # # upper() sequence
+    # up_seq_sars_cov_1__ = seq_sars_cov_1__.upper()
+    # print(up_seq_sars_cov_1__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-2:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-1, Severe Scute Respiratory Syndrome Coronavirus 2 (SARS-CoV-2)
+    # # sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_045512.2?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_045512.2?report=genbank
+    # with open('dataset-ncbi/seq SARS-CoV-2.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_sars_cov_2__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_sars_cov_2__)
+    # print(len(seq_sars_cov_2__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_sars_cov_2__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_2__ = seq_sars_cov_2__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_sars_cov_2__)
+
+    # # upper() sequence
+    # up_seq_sars_cov_2__ = seq_sars_cov_2__.upper()
+    # print(up_seq_sars_cov_2__)
+    # ---------------------------------------------------------------------------------------------------------
+
+
+    # contoh load Human Genome yang terpapar coronavirus 229:
+    # # ---------------
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_002645.1?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_002645.1?report=genbank
+
+    # print('name: ', 'Human coronavirus 229E, complete genome')
+
+    # # with open('dataset-ncbi/seq Human coronavirus 229E complete genome.txt') as f:
+    # with open(file_path) as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_coronavirus_229e__ = ''.join(my_list)
+    # # print(my_list)
+    # print('seq: ', seq_coronavirus_229e__)
+    # print('len: ', len(seq_coronavirus_229e__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # get_unik_kode = set(seq_coronavirus_229e__)
+    # print('get unik kode: ', get_unik_kode, ' => ', [ord(x)-97 for x in list(get_unik_kode)], end="\n\n")
+
+    # # konversi setiap char kodenya menjadi angka array, misal dgn a-z => 1-26
+    # val_a_z_seq_coronavirus_229e__ = seq2val_space_plus_arr_a_z(seq_coronavirus_229e__)
+    # print('Val seq: ', val_a_z_seq_coronavirus_229e__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-1:
+    # ---------------
+    # Load data Sequence & Pre-Processing
+    # Virus ke-3, Severe Scute Respiratory Syndrome Coronavirus 1 (SARS-CoV-1)
+    # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=fasta
+    #         https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=genbank
+
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA sample.txt")
+    # " " => 0, "a" => 1, "c" => 2, "g" => 3, "t" => 4
+    # 1 at ga aa => (0,1,0), (1,4,0), (2,0,0), (3,3,0), (4,1,0), (5,0,0), (6,1,0), (7,1,0)
+    # 7 tg gg tc
+    # 13 ga
+
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA MERS.txt")
+    file_path = os.path.join(BASE_DIR, "static/data/sequence DNA SARS-CoV-1.txt")
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA SARS-CoV-2.txt")
+
+    with open(file_path) as f:
+      # tanpa disisipkan spasi
+      # my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+      # seq_sars_cov_1__ = ''.join(my_list)
+
+      # dengan disisipkan spasi, tanpa memperhatikan new_line
+      my_list = [' '.join(x.strip().split(" ")[1:]) for x in f]
+      seq_sars_cov_1__ = ''.join(my_list)
+    print(my_list)
+    print(seq_sars_cov_1__)
+    length_seq_sars_cov_1__ = len(seq_sars_cov_1__)
+    print(length_seq_sars_cov_1__)
+
+    #get unik kode atau simbol IUPAC utk nucleotides
+    print(set(seq_sars_cov_1__))
+
+    # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_1__ = seq_sars_cov_1__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    val_seq_sars_cov_1__ = seq_sars_cov_1__.replace(" ","0").replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    print(val_seq_sars_cov_1__)
+
+    # upper() sequence
+    up_seq_sars_cov_1__ = seq_sars_cov_1__.upper()
+    print(up_seq_sars_cov_1__)
+
+    # kode acgt dengan disisipkan spasi
+    string_seq_dna = "\n".join(my_list)
+
+    # tranformasi dari val_seq_sars_cov_1__ menjadi titik koordinat 2D/3d
+    # untuk dibuat visualisasi grafis dengan WebGL
+    # loop_counter_utk_new_line = 0
+    # loop_counter_utk_pembatas_spasi = 0
+    set_jeda_tiap_level_counter_utk_new_line = 0
+    # increment_i_stlh_pembatas_spasi = 0
+    byk_spasi_tiap_baris = 5
+    byk_char_per_selain_spasi = 60
+
+
+    # koordinat_x_y_z = ''
+    # for i in range(length_seq_sars_cov_1__):
+    #     # looping per barisnya, misal dari data diketahui per byk_char_per_selain_spasi
+
+    #     if(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris)==0 and i>0):
+    #         set_jeda_tiap_level_counter_utk_new_line += 7
+
+    #     # koordinat_x = str(i)
+    #     koordinat_x = str(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris))
+    #     # koordinat_y = str(int(val_seq_sars_cov_1__[i]))
+    #     koordinat_y = str(int(val_seq_sars_cov_1__[i]) + set_jeda_tiap_level_counter_utk_new_line)
+    #     koordinat_z = str(0)
+
+    #     if(i==0):
+    #         koordinat_x_y_z += '('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+    #     else:
+    #         koordinat_x_y_z += ',('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+
+    koordinat_x_y_z = ''
+    for i in range(length_seq_sars_cov_1__):
+        # looping per barisnya, misal dari data diketahui per byk_char_per_selain_spasi
+
+        if(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris)==0 and i>0):
+            set_jeda_tiap_level_counter_utk_new_line += 7
+
+        # koordinat_x = str(i)
+        koordinat_x = str(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris))
+        # koordinat_y = str(int(val_seq_sars_cov_1__[i]))
+        koordinat_y = str(int(val_seq_sars_cov_1__[i]) + set_jeda_tiap_level_counter_utk_new_line)
+        koordinat_z = str(0)
+
+        if(i==0):
+            koordinat_x_y_z += koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+        else:
+            koordinat_x_y_z += ','+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+
+
+
+
+    # ---------------------------------------------------------------------------------------------------------
+
+    # cek panjang seq dna
+    # return str(length_seq_sars_cov_1__);
+
+    # menampilkan hasil konversi ke x,y,z
+    # return koordinat_x_y_z;
+
+    # menampilkan hasil konversi dalam bentuk angka
+    # return val_seq_sars_cov_1__;
+
+    # menampilkan kode acgt dengan disisipkan spasi
+    # return seq_sars_cov_1__;
+    # atau
+    # return string_seq_dna;
+
+    mylist_koordinat_x_y_z = koordinat_x_y_z.replace(' ','').split(',')
+
+    # return render_template('draw_dna.html', coords_xyz = list(koordinat_x_y_z))
+    return render_template('draw_dna_cov1.html', coords_xyz = mylist_koordinat_x_y_z)
+
+# contoh membuat konversi sequence dna
+@app.route('/dna')
+def convert_dna():
+    # (Konversi DNA virus) => 2D/3D,
+    # =============================================
+
+    import os.path
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # contoh load MERS:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-2, Middle East Respiratory Syndrome (MERS)
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_019843.3?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_019843.3?report=genbank
+    # with open('dataset-ncbi/seq MERS.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_mers__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_mers__)
+    # print(len(seq_mers__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_mers__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_mers__ = seq_mers__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_mers__)
+
+    # # upper() sequence
+    # up_seq_mers__ = seq_mers__.upper()
+    # print(up_seq_mers__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-1:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-3, Severe Scute Respiratory Syndrome Coronavirus 1 (SARS-CoV-1)
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=genbank
+    # with open('dataset-ncbi/seq SARS-CoV-1.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_sars_cov_1__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_sars_cov_1__)
+    # print(len(seq_sars_cov_1__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_sars_cov_1__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_1__ = seq_sars_cov_1__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_sars_cov_1__)
+
+    # # upper() sequence
+    # up_seq_sars_cov_1__ = seq_sars_cov_1__.upper()
+    # print(up_seq_sars_cov_1__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-2:
+    # ---------------
+    # # Load data Sequence & Pre-Processing
+    # # Virus ke-1, Severe Scute Respiratory Syndrome Coronavirus 2 (SARS-CoV-2)
+    # # sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_045512.2?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_045512.2?report=genbank
+    # with open('dataset-ncbi/seq SARS-CoV-2.txt') as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_sars_cov_2__ = ''.join(my_list)
+    # print(my_list)
+    # print(seq_sars_cov_2__)
+    # print(len(seq_sars_cov_2__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_sars_cov_2__))
+
+    # # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_2__ = seq_sars_cov_2__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    # print(val_seq_sars_cov_2__)
+
+    # # upper() sequence
+    # up_seq_sars_cov_2__ = seq_sars_cov_2__.upper()
+    # print(up_seq_sars_cov_2__)
+    # ---------------------------------------------------------------------------------------------------------
+
+
+    # contoh load Human Genome yang terpapar coronavirus 229:
+    # # ---------------
+    # # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/NC_002645.1?report=fasta
+    # #         https://www.ncbi.nlm.nih.gov/nuccore/NC_002645.1?report=genbank
+
+    # print('name: ', 'Human coronavirus 229E, complete genome')
+
+    # # with open('dataset-ncbi/seq Human coronavirus 229E complete genome.txt') as f:
+    # with open(file_path) as f:
+    #   my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+    #   seq_coronavirus_229e__ = ''.join(my_list)
+    # # print(my_list)
+    # print('seq: ', seq_coronavirus_229e__)
+    # print('len: ', len(seq_coronavirus_229e__))
+
+    # #get unik kode atau simbol IUPAC utk nucleotides
+    # get_unik_kode = set(seq_coronavirus_229e__)
+    # print('get unik kode: ', get_unik_kode, ' => ', [ord(x)-97 for x in list(get_unik_kode)], end="\n\n")
+
+    # # konversi setiap char kodenya menjadi angka array, misal dgn a-z => 1-26
+    # val_a_z_seq_coronavirus_229e__ = seq2val_space_plus_arr_a_z(seq_coronavirus_229e__)
+    # print('Val seq: ', val_a_z_seq_coronavirus_229e__)
+    # ---------------------------------------------------------------------------------------------------------
+
+    # contoh load SARS-CoV-1:
+    # ---------------
+    # Load data Sequence & Pre-Processing
+    # Virus ke-3, Severe Scute Respiratory Syndrome Coronavirus 1 (SARS-CoV-1)
+    # Sumber: https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=fasta
+    #         https://www.ncbi.nlm.nih.gov/nuccore/MT649402.1?report=genbank
+
+    file_path = os.path.join(BASE_DIR, "static/data/sequence DNA sample.txt")
+    # " " => 0, "a" => 1, "c" => 2, "g" => 3, "t" => 4
+    # 1 at ga aa => (0,1,0), (1,4,0), (2,0,0), (3,3,0), (4,1,0), (5,0,0), (6,1,0), (7,1,0)
+    # 7 tg gg tc
+    # 13 ga
+
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA MERS.txt")
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA SARS-CoV-1.txt")
+    # file_path = os.path.join(BASE_DIR, "static/data/sequence DNA SARS-CoV-2.txt")
+
+    with open(file_path) as f:
+      # tanpa disisipkan spasi
+      # my_list = [''.join(x.strip().split(" ")[1:]) for x in f]
+      # seq_sars_cov_1__ = ''.join(my_list)
+
+      # dengan disisipkan spasi, tanpa memperhatikan new_line
+      my_list = [' '.join(x.strip().split(" ")[1:]) for x in f]
+      seq_sars_cov_1__ = ''.join(my_list)
+    print(my_list)
+    print(seq_sars_cov_1__)
+    length_seq_sars_cov_1__ = len(seq_sars_cov_1__)
+    print(length_seq_sars_cov_1__)
+
+    #get unik kode atau simbol IUPAC utk nucleotides
+    print(set(seq_sars_cov_1__))
+
+    # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # val_seq_sars_cov_1__ = seq_sars_cov_1__.replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    val_seq_sars_cov_1__ = seq_sars_cov_1__.replace(" ","0").replace("a","1").replace("c","2").replace("g","3").replace("t","4")
+    print(val_seq_sars_cov_1__)
+
+    # upper() sequence
+    up_seq_sars_cov_1__ = seq_sars_cov_1__.upper()
+    print(up_seq_sars_cov_1__)
+
+    # kode acgt dengan disisipkan spasi
+    string_seq_dna = "\n".join(my_list)
+
+    # tranformasi dari val_seq_sars_cov_1__ menjadi titik koordinat 2D/3d
+    # untuk dibuat visualisasi grafis dengan WebGL
+    # loop_counter_utk_new_line = 0
+    # loop_counter_utk_pembatas_spasi = 0
+    set_jeda_tiap_level_counter_utk_new_line = 0
+    # increment_i_stlh_pembatas_spasi = 0
+    byk_spasi_tiap_baris = 2
+    byk_char_per_selain_spasi = 6
+
+
+    koordinat_x_y_z = ''
+    for i in range(length_seq_sars_cov_1__):
+        # looping per barisnya, misal dari data diketahui per byk_char_per_selain_spasi
+
+        if(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris)==0 and i>0):
+            set_jeda_tiap_level_counter_utk_new_line += 7
+
+        # koordinat_x = str(i)
+        koordinat_x = str(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris))
+        # koordinat_y = str(int(val_seq_sars_cov_1__[i]))
+        koordinat_y = str(int(val_seq_sars_cov_1__[i]) + set_jeda_tiap_level_counter_utk_new_line)
+        koordinat_z = str(0)
+
+        if(i==0):
+            koordinat_x_y_z += '('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+        else:
+            koordinat_x_y_z += ',('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+
+
+
+
+    # ---------------------------------------------------------------------------------------------------------
+
+    # cek panjang seq dna
+    # return str(length_seq_sars_cov_1__);
+
+    # menampilkan hasil konversi ke x,y,z
+    return koordinat_x_y_z;
+
+    # menampilkan hasil konversi dalam bentuk angka
+    # return val_seq_sars_cov_1__;
+
+    # menampilkan kode acgt dengan disisipkan spasi
+    # return seq_sars_cov_1__;
+    # atau
+    # return string_seq_dna;
+
 @app.route('/menu')
 def menugrafkom():
     return render_template('launchpad_grafkom.html')

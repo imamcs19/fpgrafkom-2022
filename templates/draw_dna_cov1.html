@@ -1,0 +1,557 @@
+{% extends "extends/base.html" %}
+{% block title %}
+    <title>Web Data App</title>
+{% endblock title %}
+{{ self.title() }}
+    Home
+{{ self.title() }}
+<button onclick="window.location.href='/'" class="btn btn-outline btn-rounded btn-info">
+    <i class="ti-arrow-left m-l-5"></i>
+    <span>Back Home</span>
+</button> Project 1
+
+{{ self.title() }}
+    Project 1
+
+{% block content %}
+
+  <!--- Cara memanggil Lib. helper WebGL dari file *.js                             -->
+  <!--                                                                              -->
+  <!--Ref.                                                                          -->
+  <!--[0] https://math.hws.edu/graphicsbook/demos/c4/texture-from-color-buffer.html -->
+  <!--                                                                              -->
+  <!-- Remodified by Imam Cholissodin | Filkom UB                                   -->
+  <!-- Tgl 20 Juni – 15 Juli 2022                                                   -->
+  <!---------------------------------------------------------------------------------->
+
+  <link rel="stylesheet" href="{{ url_for('static', filename = 'css/cubemap/demo.css') }}">
+
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap4/demo-core.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap4/glsim.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap4/teapot-model-IFS.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap4/basic-object-models-IFS.js') }}"></script>
+
+    <script>
+
+    var camera;
+
+    var canvas;  // the canvas on which we will draw.
+
+    var frameNumber = 0;  // frame number for the animation
+
+    var sphere, cubeModel, cylinder, cone, torus, teapot;  // model data for six objects.
+
+
+    /*  The display function, which draws the content of the canvas.
+     */
+    function draw() {
+
+        //var objectNumber = Number(document.getElementById("object").value);  // which object to draw.
+
+        /* First, draw the 2D scene, using a 256-by256 viewport to get a power-of-two texture. */
+
+        glDisable(GL_LIGHTING);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_TEXTURE_2D);
+        //glViewport(0,0,256,256);  // Note that canvas must be at least 256-by-256.
+
+        // <canvas id="maincanvas" width="400" height="350"></canvas>
+        //glViewport(128,128,128,128);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        //glOrtho( 0,7, -1,5, -1,1 );  // Limits requied by 2D scene
+        glOrtho( -10,10, -10,10, -1,1 );  // Limits requied by 2D scene
+        //glOrtho( -64,64, -64,64, -1,1 );  // Limits requied by 2D scene
+        glMatrixMode(GL_MODELVIEW);
+
+        draw2DScene();
+
+        //if (objectNumber == 6) {
+        //    return;   // Just show the 2D scene as the image in the canvas.
+        //}
+
+        /* Copy the image into the texture. */
+
+        //glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, 256, 256, 0);
+
+        /* Since we do not have mipmaps for the texture, we MUST set the texture
+           minimication filter to GL_NEAREST or GL_LINEAR, since the default
+           filter requires mipmaps. */
+
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+        /* Now, draw the shape, with the texture */
+
+        //glEnable(GL_LIGHTING);
+        //glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_TEXTURE_2D);
+        glViewport(0,0,canvas.width,canvas.height);  // restore full viewport!
+
+        //camera.apply(); // (Sets up projection and viewing transforms.)
+
+        //glClearColor( 0, 0, 0, 1 );
+       // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        /*switch(objectNumber) {
+        case 0:
+            glRotatef(-90,1,0,0);
+    	glScalef(1.5,1.5,1.5);
+            drawModel(sphere);
+            break;
+        case 1:
+    	glScalef(1.2,1.2,1.2);
+             drawModel(cubeModel);
+             break;
+        case 2:
+    	glRotatef(-90,1,0,0);
+    	glScalef(1.3,1.3,1.3);
+    	drawModel(cylinder);
+    	break;
+        case 3:
+    	glRotatef(-90,1,0,0);
+    	glScalef(1.3,1.3,1.3);
+    	drawModel(cone);
+    	break;
+        case 4:
+    	glScalef(1.6,1.6,1.6);
+    	drawModel(torus);
+    	break;
+        case 5:
+    	glScalef(0.06, 0.06, 0.06);
+    	drawModel(teapot);
+    	break;
+        }*/
+
+    }
+
+    /**
+     *  Draws a model using glDrawElements.  The model data must be in the format produced by
+     *  the functions in basic-object-models-IFS.js.
+     */
+    function drawModel(model) {
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3,GL_FLOAT,0,model.vertexPositions);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glNormalPointer(GL_FLOAT, 0, model.vertexNormals);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(2,GL_FLOAT,0,model.vertexTextureCoords);
+        glDrawElements(GL_TRIANGLES, model.indices.length, GL_UNSIGNED_BYTE, model.indices);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
+
+
+    function initGL() {
+        glEnable(GL_LIGHT0);
+        glEnable(GL_NORMALIZE);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [ 1, 1, 1,1 ]);// white material for texturing.
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    //----------------- Drawing the 2D scene ----------------------------------------
+
+    /*
+     * Draw a 32-sided regular polygon as an approximation for a circular disk.
+     * (This is necessary since OpenGL has no commands for drawing ovals, circles,
+     * or curves.)  The disk is centered at (0,0) with a radius given by the
+     * parameter.
+     */
+    function drawDisk(radius) {
+        var d;
+        glBegin(GL_POLYGON);
+        for (d = 0; d < 32; d++) {
+            var angle = 2*Math.PI/32 * d;
+            glVertex2d( radius*Math.cos(angle), radius*Math.sin(angle));
+        }
+        glEnd();
+    }
+
+    /*
+     * Draw a wheel, centered at (0,0) and with radius 1. The wheel has 15 spokes
+     * that rotate in a clockwise direction as the animation proceeds.
+     */
+    function drawWheel() {
+        var i;
+        glColor3f(0,0,0);
+        drawDisk(1);
+        glColor3f(0.75, 0.75, 0.75);
+        drawDisk(0.8);
+        glColor3f(0,0,0);
+        drawDisk(0.2);
+        glRotatef(frameNumber*20,0,0,1);
+        glBegin(GL_LINES);
+        for (i = 0; i < 15; i++) {
+            glVertex2f(0,0);
+            glVertex2d(Math.cos(i*2*Math.PI/15), Math.sin(i*2*Math.PI/15));
+        }
+        glEnd();
+    }
+
+    /*
+     * Draw a cart consisting of a rectangular body and two wheels.  The wheels
+     * are drawn by the drawWheel() method; a different translation is applied to each
+     * wheel to move them into position under the body.  The body of the cart
+     * is a red rectangle with corner at (0,-2.5), width 5, and height 2.  The
+     * center of the bottom of the rectangle is at (0,0).
+     */
+    function drawCart() {
+        glPushMatrix();
+        glTranslatef(-1.5, -0.1, 0);
+        glScalef(0.8,0.8,1);
+        drawWheel();
+        glPopMatrix();
+        glPushMatrix();
+        glTranslatef(1.5, -0.1, 0);
+        glScalef(0.8,0.8,1);
+        drawWheel();
+        glPopMatrix();
+        glColor3f(1,0,0);
+        glBegin(GL_POLYGON);
+        glVertex2f(-2.5,0);
+        glVertex2f(2.5,0);
+        glVertex2f(2.5,2);
+        glVertex2f(-2.5,2);
+        glEnd();
+    }
+
+    /*
+     * Draw a sun with radius 0.5 centered at (0,0).  There are also 13 rays which
+     * extend outside from the sun for another 0.25 units.
+     */
+    function drawSun() {
+        var i;
+        glColor3f(1,1,0);
+        for (i = 0; i < 13; i++) { // Draw 13 rays, with different rotations.
+            glRotatef( 360 / 13, 0, 0, 1 ); // Note that the rotations accumulate!
+            glBegin(GL_LINES);
+            glVertex2f(0, 0);
+            glVertex2f(0.75, 0);
+            glEnd();
+        }
+        drawDisk(0.5);
+        glColor3f(0,0,0);
+    }
+
+    /*
+     * Draw a windmill, consisting of a pole and three vanes.  The pole extends from the
+     * point (0,0) to (0,3).  The vanes radiate out from (0,3).  A rotation that depends
+     * on the frame number is applied to the whole set of vanes, which causes the windmill
+     * to rotate as the animation proceeds.  Note that this method changes the current
+     * transform in the GL context gl!  The caller of this subroutine should take care
+     * to save and restore the original transform, if necessary.
+     */
+    function drawWindmill() {
+        var i;
+        glColor3f(0.8, 0.8, 0.9);
+        glBegin(GL_POLYGON);
+        glVertex2f(-0.05, 0);
+        glVertex2f(0.05, 0);
+        glVertex2f(0.05, 3);
+        glVertex2f(-0.05, 3);
+        glEnd();
+        glTranslatef(0, 3, 0);
+        glRotated(frameNumber * (180.0/46), 0, 0, 1);
+        glColor3f(0.4, 0.4, 0.8);
+        for (i = 0; i < 3; i++) {
+            glRotated(120, 0, 0, 1);  // Note: These rotations accumulate.
+            glBegin(GL_POLYGON);
+            glVertex2f(0,0);
+            glVertex2f(0.5, 0.1);
+            glVertex2f(1.5,0);
+            glVertex2f(0.5, -0.1);
+            glEnd();
+        }
+    }
+
+    function drawquad(){
+       glColor3f(1.0, 0.0, 0.0);
+       glBegin(GL_LINE_LOOP);
+        glVertex2f(-8.0, -4.0);
+        glVertex2f(8.0, -4.0);
+        glVertex2f(8.0, 4.0);
+        glVertex2f(-8.0, 4.0);
+       glEnd();
+
+    }
+
+
+
+    function drawlooptitik(){
+        var i, x1, y1, x2, y2, m, step_loop;
+        var loop_line;
+        var x,y;
+        glColor3f(1.0, 1.0, 1.0);
+
+        // untuk looping vertikal
+         x2 = -8.0;
+         y2 = 4.0;
+         x1 = -8.0;
+         y1 = -4.0;
+         m = (y2-y1)/(x2-x1); // count gradient
+         m.toPrecision(1);
+         step_loop = 0.2;
+
+        glBegin(GL_POINTS);
+        for (i = step_loop ; i <= 16 ; i += 5*step_loop){
+            for (y = y1 ; y <= y2 ; y += step_loop) {
+                //y = m*(x-x1)+y1;
+                x = ((y - y1)/m) + x1;
+                if(Math.abs(x) < 0.001){
+                    x = 0.0;
+                }
+                if(Math.abs(y) < 0.001){
+                    y = 0.0;
+                }
+                x = x + i;
+                console.log("x = "+ x.toPrecision(2) + " y = " + y.toPrecision(2));
+
+
+                glVertex2f(x.toPrecision(2),y.toPrecision(2)); // as y
+                //loop_line+=3;
+
+            }
+        }
+        glEnd();
+
+        // untuk looping horizontal
+         x2 = 8.0;
+         y2 = -4.0;
+         x1 = -8.0;
+         y1 = -4.0;
+         m = (y2-y1)/(x2-x1); // count gradient
+         m.toPrecision(1);
+         step_loop = 0.2;
+
+        glBegin(GL_POINTS);
+        for (i = step_loop ; i <= 8 ; i += 5*step_loop){
+            for (x = x1 ; x <= x2 ; x += step_loop) {
+                y = m*(x-x1)+y1;
+                if(Math.abs(x) < 0.001){
+                    x = 0.0;
+                }
+                if(Math.abs(y) < 0.001){
+                    y = 0.0;
+                }
+                y = y + i;
+                console.log("x = "+ x.toPrecision(2) + " y = " + y.toPrecision(2));
+
+
+                glVertex2f(x.toPrecision(2),y.toPrecision(2)); // as y
+                //loop_line+=3;
+
+            }
+        }
+        glEnd();
+
+    }
+
+    function drawDNA(){
+        // <!--call var flask di JS -->
+        var myVarXYZ = new Array();
+
+        {% if coords_xyz is defined and coords_xyz %}
+          myVarXYZ = {{ coords_xyz | tojson }};
+        {% endif %}
+
+        var size_point = 2;
+        //glColor3f(1.0, 1.0, 1.0);
+        glEnable(GL_POINT_SMOOTH);
+        glPointSize(size_point);
+        glBegin(GL_POINTS);
+        length_myVarXYZ = myVarXYZ.length;
+        var toScale = 25;
+        var set_jeda_tiap_level_counter_utk_new_line = 0;
+        var byk_spasi_tiap_baris = 5
+        var byk_char_per_selain_spasi = 60
+
+
+
+        for (var i = 0 ; i < length_myVarXYZ ; i+=3){
+
+                //console.log('x = '+ myVarXYZ[i] + ' len = ' + length_myVarXYZ);
+
+                //glVertex2f((parseFloat(myVarXYZ[i])/toScale).toPrecision(2),(parseFloat(myVarXYZ[i+1])/toScale).toPrecision(2)); // as y
+                //loop_line+=3;
+
+                if(i%(byk_char_per_selain_spasi+byk_spasi_tiap_baris)==0 && i>0){
+                    set_jeda_tiap_level_counter_utk_new_line += 7;
+                }
+
+
+                glPushMatrix();
+
+
+                     // " " => 0, "a" => 1, "c" => 2, "g" => 3, "t" => 4
+                     if(parseInt(myVarXYZ[i+1]) > 0 && (parseInt(myVarXYZ[i+1])-set_jeda_tiap_level_counter_utk_new_line)%1==0){
+                         // utk a
+                         glColor3f(1.0, 0.0, 0.0);
+                     }
+                     if(parseInt(myVarXYZ[i+1]) > 0 && (parseInt(myVarXYZ[i+1])-set_jeda_tiap_level_counter_utk_new_line)%2==0){
+                         // utk c
+                         glColor3f(0.0, 1.0, 0.0);
+                     }
+                     if(parseInt(myVarXYZ[i+1]) > 0 && (parseInt(myVarXYZ[i+1])-set_jeda_tiap_level_counter_utk_new_line)%3==0){
+                         // utk g
+                         glColor3f(0.0, 0.0, 1.0);
+                     }
+                     if(parseInt(myVarXYZ[i+1]) > 0 && (parseInt(myVarXYZ[i+1])-set_jeda_tiap_level_counter_utk_new_line)%4==0){
+                         // utk t
+                         glColor3f(1.0, 1.0, 0.0);
+                     }
+                    if((parseInt(myVarXYZ[i+1])-set_jeda_tiap_level_counter_utk_new_line) == 0){
+                         // utk " "
+                         glColor3f(1.0, 1.0, 1.0);
+                     }
+
+                     glVertex3f((parseFloat(myVarXYZ[i])/toScale).toPrecision(2),(parseFloat(myVarXYZ[i+1])/toScale).toPrecision(2),0.0); // as y
+                glPopMatrix();
+
+
+        }
+        glEnd();
+
+        // console.log('length_myVarXYZ-1 = '+ (parseFloat(myVarXYZ[length_myVarXYZ-1])/toScale).toPrecision(2) + ' len = ' + length_myVarXYZ);
+        // console.log('length_myVarXYZ-2 = '+ (parseFloat(myVarXYZ[length_myVarXYZ-2])/toScale).toPrecision(2) + ' len = ' + length_myVarXYZ);
+        // console.log('length_myVarXYZ-3 = '+ (parseFloat(myVarXYZ[length_myVarXYZ-3])/toScale).toPrecision(2) + ' len = ' + length_myVarXYZ);
+        // console.log('length_myVarXYZ-4 = '+ (parseFloat(myVarXYZ[length_myVarXYZ-4])/toScale).toPrecision(2) + ' len = ' + length_myVarXYZ);
+        // console.log('length_myVarXYZ-5 = '+ (parseFloat(myVarXYZ[length_myVarXYZ-5])/toScale).toPrecision(2) + ' len = ' + length_myVarXYZ);
+        // console.log('length_myVarXYZ-6 = '+ (parseFloat(myVarXYZ[length_myVarXYZ-5])/toScale).toPrecision(2) + ' len = ' + length_myVarXYZ);
+
+        /*
+        var arr_myVarXYZ = myVarXYZ.split(',');
+
+        glBegin(GL_POINTS);
+        length_arr_myVarXYZ = arr_myVarXYZ.length;
+        for (var i = 0 ; i < length_arr_myVarXYZ ; i++){
+
+                console.log('x = '+ arr_myVarXYZ[i] + ' len = ' + length_arr_myVarXYZ);
+
+
+                //glVertex2f(x.toPrecision(2),y.toPrecision(2)); // as y
+                //loop_line+=3;
+
+
+        }
+        glEnd();
+        */
+
+    }
+
+    /*  Draws the entire 2D scene.
+     */
+    function draw2DScene() {
+
+        glClearColor( 0.0, 0.0, 0.0, 1.0 );
+        glClear(GL_COLOR_BUFFER_BIT); // Fills the scene with blue.
+        glLoadIdentity();
+
+        // Membuat looping titik
+        glPushMatrix();
+          glTranslated(-1.75,-4,0);
+          drawDNA();
+        glPopMatrix();
+
+        // Membuat segi empat
+        /*glPushMatrix();
+           //glTranslated(0.75,1,0);
+          //glScaled(0.6,0.6,1);
+          drawquad();
+        glPopMatrix();
+
+        // Membuat looping titik
+        glPushMatrix();
+          drawlooptitik();
+        glPopMatrix();*/
+
+
+
+
+
+    }  // end display
+
+
+    //-------------------------------------------------------------------------------
+
+    var animating = false;
+
+    function frame() {
+        if (animating) {
+    	frameNumber++;
+    	draw();
+    	setTimeout(frame,30);
+        }
+    }
+
+    function doAnimate() {
+        //animating = document.getElementById("animate").checked;
+        if (animating) {
+    	frame();
+        }
+    }
+
+    function init() {
+        try {
+           canvas = document.getElementById("maincanvas");
+               glsimUse(canvas,null); // ( The "null" gives an RGBA color buffer instead of RGB.
+    		                          //   It is needed here because the call to copyTexImage2D
+    								  //   uses the RGBA format. )
+        }
+        catch (e) {
+            document.getElementById("canvas-holder").innerHTML="<p><b>Sorry, an error occurred:<br>" +
+                    e + "</b></p>";
+            return;
+        }
+        initGL();
+        //document.getElementById("object").value = "1";
+        //document.getElementById("object").onchange = draw;
+        //document.getElementById("animate").checked = false;
+        //document.getElementById("animate").onchange = doAnimate;
+        //camera = new Camera();
+        //camera.setScale(1);
+        // gluLookAt(mata_x, mata_y, mata_z, lihat_x, lihat_y, lihat_z, atas_x, atas_y, atas_z)
+    	//camera.lookAt(2,2,5, 0,0,0, 0,1,0);
+        //camera.installTrackball(draw);
+        //sphere = uvSphere();
+        //cubeModel = cube();
+        //cylinder = uvCylinder();
+        //cone = uvCone();
+        //torus = uvTorus();
+        //teapot = teapotModel;  // (This one is just a variable, defined in teapot-model-IFS.js)
+        draw();
+    }
+
+    </script>
+    </head>
+    <body onload="init()">
+
+    <div id="content">
+
+    <!--<h3 id="headline">Texture Mapping dari Object Buffer</h3>-->
+    <h2>Plotting data DNA Menggunakan Objek Titik</h2>
+
+    <div id="canvas-holder">
+    <canvas id="maincanvas" width="400" height="350"></canvas>
+    </div>
+
+
+    <br clear="all">
+    <br clear="all">
+
+    <!--<p style="text-indent:30px"><b>Object</b>:-->
+    <!--<select id="object">-->
+    <!--   <option value="0">Sphere</option>-->
+    <!--   <option value="1" selected="selected">Cube</option>-->
+    <!--   <option value="2">Cylinder</option>-->
+    <!--   <option value="3">Cone</option>-->
+    <!--   <option value="4">Torus</option>-->
+    <!--   <option value="5">Teapot</option>-->
+    <!--   <option value="6">SHOW 2D SCENE</option>-->
+    <!--</select>-->
+    <!--<label><input type="checkbox" id="animate" style="margin-left:30px"><b>Animate</b></label></p>-->
+    </div>
+
+{% endblock content %}
