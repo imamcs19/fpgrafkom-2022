@@ -159,6 +159,16 @@ def draw_antialiasing():
 def draw_quadpoint():
     return render_template('draw_segiempat_bergaris_titik.html')
 
+# contoh membuat efek pencahayaan
+@app.route('/cahaya')
+def draw_cahaya():
+    return render_template('draw_lighting.html')
+
+# contoh membuat efek pencahayaan dan bayangan
+@app.route('/cahaya2')
+def draw_cahaya2():
+    return render_template('draw_lighting_n_shading.html')
+
 @app.route('/menu')
 def menugrafkom():
     return render_template('launchpad_grafkom.html')
@@ -503,6 +513,32 @@ def connect_db():
     # with sqlite3.connect(db_path) as db:
 
     return sqlite3.connect(db_path)
+
+#konversi Seq object menjadi array int [a-z], misal menjadi [1-26] => next untuk bahan optimasi penskalaan
+def seq2val_space_plus_arr_a_z(seq_):
+    #get unik kode atau simbol IUPAC utk nucleotides
+    # print(set(seq_.lower()))
+    # {'N', 'G', 't', 'M', 'C', 'A', 'g', 'T', 'c', 'R', 'a'}
+    # ['n', 'g', 't', 'm', 'c', 'a', 'g', 't', 'c', 'r', 'a']
+    # {'a', 'c', 'g', 'm', 'n', 'r', 't'}
+
+    # konversi setiap char kodenya menjadi angka, misal a = 1, c = 2, g = 3, t = 4
+    # Di mana konversi ini nantinya dapat juga dicari nilai yang optimal
+    seq_ = str(seq_).lower()
+
+    for idx_letter in range(26):
+        seq_= seq_.replace(chr(idx_letter+97),str(idx_letter)+" ")
+
+    val_seq_ = seq_.rstrip()
+    # print(val_seq_)
+
+    # upper() sequence
+    # up_seq_ = seq_.upper()
+    # print(up_seq_)
+
+    arr_val_seq_ = np.fromstring(val_seq_,dtype=int,sep=' ')
+
+    return arr_val_seq_
 
 ## untuk trendTwit
 ## mencoba streaming
