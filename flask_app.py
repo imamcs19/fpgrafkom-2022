@@ -169,6 +169,11 @@ def draw_cahaya():
 def draw_cahaya2():
     return render_template('draw_lighting_n_shading.html')
 
+# contoh membuat animasi optimasi dengan algoritma PSO
+@app.route('/anim_pso')
+def draw_anim_pso():
+    return render_template('draw_animasi_optimasi.html')
+
 
 # contoh membuat plot sequence dna sample
 @app.route('/plot_dna')
@@ -621,7 +626,7 @@ def draw_dna2():
     # return render_template('draw_dna.html', coords_xyz = list(koordinat_x_y_z))
     return render_template('draw_dna_cov1.html', coords_xyz = mylist_koordinat_x_y_z)
 
-# contoh membuat konversi sequence dna
+# contoh membuat konversi sequence dna menjadi numeric
 @app.route('/dna')
 def convert_dna():
     # (Konversi DNA virus) => 2D/3D,
