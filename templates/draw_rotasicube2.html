@@ -1,0 +1,285 @@
+{% extends "extends/base.html" %}
+{% block title %}
+    <title>Web Data App</title>
+{% endblock title %}
+{{ self.title() }}
+    Home
+{{ self.title() }}
+<button onclick="window.location.href='/'" class="btn btn-outline btn-rounded btn-info">
+    <i class="ti-arrow-left m-l-5"></i>
+    <span>Back Home</span>
+</button> Project 1
+
+{{ self.title() }}
+    Project 1
+
+{% block content %}
+
+  <canvas id="rttCanvas" style="display:none" width="1024" height="1024"></canvas>
+  <!-- <canvas id="rttCanvas" style="display:none" width="100%"></canvas> -->
+
+  <canvas id="webGLcanvas" style='position: absolute; left: 0px; top: 0px;' ></canvas>
+  <div id="hud" ng-controller="hudController">
+    <div id="fps" style='position: absolute; right: 5px; top: 5px;'><font color="white">{{ fps }}</font></div>
+  </div>
+
+  <!-- Cara memanggil Lib. helper WebGL dari file *.js                                           -->
+  <!--                                                                                            -->
+  <!--Ref.                                                                                        -->
+  <!--[0] https://www.tutorialspoint.com/webgl/webgl_cube_rotation.htm                            -->
+  <!--[1] https://imagine.inrialpes.fr/people/Francois.Faure/htmlCourses/WebGL/meshes/cube8.html  -->
+  <!--                                                                                            -->
+  <!-- Remodified by Imam Cholissodin | Filkom UB                                                 -->
+  <!-- Tgl 20 Juni – 15 Juli 2022                                                                 -->
+  <!------------------------------------------------------------->
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/gl-matrix.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/shader-utils.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/trackball.js') }}"></script>
+
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/cubePoints.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/cubeFaces8.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/cubeFaces36.js') }}"></script>
+
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/grid.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/frame.js') }}"></script>
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_cube_color_tiap_vertex/frameElement.js') }}"></script>-->
+
+	<script id="shader-vs" type="x-shader/x-vertex">
+		attribute vec3 aVertexPosition;
+		attribute vec4 aVertexColor;
+
+		uniform mat4 uMVMatrix;
+		uniform mat4 uPMatrix;
+		uniform float pointSize;
+
+		/* COLOR */
+		varying vec4 vColor;
+
+		void main(void) {
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+			gl_PointSize = pointSize;
+			/* COLOR */
+			vColor = aVertexColor;
+		}
+	</script>
+
+	<script id="shader-fs" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		/* COLOR */
+		varying vec4 vColor;
+
+
+		void main(void) {
+			/* COLOR */
+			gl_FragColor = vColor;
+
+
+			// TODO COLOR : commenter la ligne suivante pour passer en mode couleur
+
+			//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+
+		}
+	</script>
+
+	<script id="shader-fs-uniform-color" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		/* COLOR */
+		// varying vec4 vColor;
+
+
+		void main(void) {
+			/* COLOR */
+			//gl_FragColor = vColor;
+
+
+			// TODO COLOR : commenter la ligne suivante pour passer en mode couleur
+
+			gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+
+		}
+	</script>
+
+<script >
+var gl;
+
+var shaderProgram;
+var shaderProgram2;
+var pointSizeUniformLocation; // Identifies the uniform that controls the size of points.
+
+var cubeFaces8;
+var grid;
+var frame;
+
+var nbX = 10;
+
+function init()
+{
+	// Create canvas and setup GL
+	var canvas = document.getElementById("maillage-canvas");
+	try {
+		// 'experimental-webgl' est utilise depuis la phase de developpement de
+		// la specification de webGL il devrait etre remplace par 'webgl' un jour
+		gl = canvas.getContext("experimental-webgl");
+		gl.viewportWidth = canvas.width;
+		gl.viewportHeight = canvas.height;
+	} catch (e) { alert("Could not initialise WebGL, sorry :-("); }
+	gl.clearColor(0.0, 0.0, 0.0, 1.0); // Couleur : noire, opacite : 100
+	gl.enable(gl.DEPTH_TEST);						// Enable depth testing
+
+	/* Mouse and keyboard interaction functions */
+	document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+	canvas.addEventListener('mousedown', mouseDown, true);
+	canvas.addEventListener('mousemove', mouseMove, true);
+	canvas.addEventListener('mouseup', mouseUp, true);
+	trackball  = new TrackBall();
+
+	// Create the shaders used to display the objects.
+	shaderProgram = initShader( "shader-vs", "shader-fs" );
+	shaderProgram2 = initShader2( "shader-vs", "shader-fs-uniform-color" );
+
+	// Create the objects
+	cubePoints = new CubePoints();
+	grid = new Grid();
+	frame = new Frame();
+	cubeFaces8 = new CubeFaces8();
+
+	// display
+	render();
+}
+
+
+/*----------------------------------------------------------------------
+ * Render
+ *---------------------------------------------------------------------*/
+function render()
+{
+	// adjust render area to the canvas
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+
+	// erase the image
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	// set perspective projection
+	mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+
+	// set viewing transformation
+    trackball.setMatrix(mvMatrix);
+
+
+	// setup shader
+ 	gl.useProgram(shaderProgram);
+    pointSizeUniformLocation = gl.getUniformLocation(shaderProgram, "pointSize");
+    gl.uniform1f(pointSizeUniformLocation, 15.0);
+	setMatrixUniforms(shaderProgram);
+
+	// draw objects using the current shader
+	//cubePoints.draw(shaderProgram);
+	cubeFaces8.draw(shaderProgram);
+	frame.draw(shaderProgram, 2.);
+
+
+
+	// setup shader
+ 	gl.useProgram(shaderProgram2);
+    pointSizeUniformLocation = gl.getUniformLocation(shaderProgram2, "pointSize");
+    gl.uniform1f(pointSizeUniformLocation, 15.0);
+	setMatrixUniforms(shaderProgram2);
+
+	// draw objects using the current shader
+	//grid.draw(shaderProgram);
+}
+
+
+
+
+/*----------------------------------------------------------------------
+ * Matrix utility functions
+ *---------------------------------------------------------------------*/
+var mvMatrix = mat4.create();
+var mvMatrixStack = [];
+var pMatrix = mat4.create();
+
+function mvPushMatrix() {
+	var copy = mat4.create();
+	mat4.set(mvMatrix, copy);
+	mvMatrixStack.push(copy);
+}
+
+function mvPopMatrix() {
+	if (mvMatrixStack.length == 0) {
+		throw "Invalid popMatrix!";
+	}
+	mvMatrix = mvMatrixStack.pop();
+}
+function setMatrixUniforms( shaderPgm ) {
+	gl.uniformMatrix4fv(shaderPgm.pMatrixUniform, false, pMatrix);
+	gl.uniformMatrix4fv(shaderPgm.mvMatrixUniform, false, mvMatrix);
+}
+
+function degToRad(degrees) {
+	return degrees * Math.PI / 180;
+}
+
+/*----------------------------------------------------------------------
+ * Scene rendering loop and mouse handler stuff follows
+ *---------------------------------------------------------------------*/
+var dragging = false;
+
+function mouseDown(event) {
+	dragging = true;
+	trackball.startDragging(event.clientX,event.clientY);
+}
+
+function mouseUp() {
+	dragging = false;
+}
+
+/* On a mouse drag, we'll re-render the scene, passing in
+ * incremented angles in each time.  */
+function mouseMove(event) {
+	if (dragging) {
+		trackball.drag(event.clientX, event.clientY);
+
+		render();
+	}
+}
+
+function handleKeyDown(event){
+	if(String.fromCharCode(event.keyCode) == "R" ){
+		trackball.setRotating();
+		//console.log("set rotating");
+	}
+	else if(String.fromCharCode(event.keyCode) == "T" ){
+		trackball.setTranslating();
+		//console.log("set translating");
+	}
+	else if(String.fromCharCode(event.keyCode) == "Z" ){
+		trackball.setZooming();
+		console.log("set zooming");
+	}
+}
+function handleKeyUp(event){
+	//console.log(String.fromCharCode(event.keyCode));
+}
+
+var trackball;
+
+
+
+	</script>
+	</head>
+	<body onload="init();">
+		<canvas id="maillage-canvas" width="600" height="600">
+				Votre navigateur semble ne pas supporter l'&eacute;l&eacute;ment HTML5
+				<code>&lt;canvas&gt;</code>.
+		</canvas>
+	</body>
+
+{% endblock content %}

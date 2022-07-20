@@ -88,6 +88,9 @@
         // GL_LIGHT1 => sorot cahaya kedua
         // GL_LIGHT2 => sorot cahaya ketiga
         // GL_LIGHT3 => sorot cahaya keempat
+        // .. maks 7
+
+        // GL_EMISSION => tingkat pancaran cahaya
 
         if (viewpointLight.checked)
             glEnable(GL_LIGHT0);
@@ -342,6 +345,7 @@
         }
         initGL();
         camera = new Camera();
+        // gluLookAt(mata_x, mata_y, mata_z, lihat_x, lihat_y, lihat_z, atas_x, atas_y, atas_z)
         camera.lookAt(5,10,30, 0,0,0, 0,1,0);
         camera.setScale(15);
         camera.installTrackball(display);

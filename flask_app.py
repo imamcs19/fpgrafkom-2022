@@ -1,4 +1,5 @@
 from flask import Flask,render_template,flash, Response, redirect,url_for,session,logging,request,jsonify
+from flask import make_response, json
 # from flask_ngrok import run_with_ngrok # Alternatif Ngrok => Heroku / PythonAnywhere / https://labs.play-with-docker.com / AWS / GCP / Azure/ eval_js dari Colab (agak terbatas) / etc
 import sqlite3
 from flask_cors import CORS
@@ -29,21 +30,282 @@ from wtforms import SubmitField
 # from flask_wtf import Form
 from flask_wtf import FlaskForm
 
+# untuk game sekak
+from flask_socketio  import SocketIO, emit, join_room, close_room
+import chess
+import uuid
+import secrets
+# import json
+import os
+
+# => terkendala socket.io tdk jalan di PythonAnywhere => alternatif deploy di heroku atau di local komputer
+SOCKET_URL = os.environ.get('SOCKET_URL')
+if SOCKET_URL is None:
+    SOCKET_URL = "http://localhost:5000/"
+    # SOCKET_URL = "https://grafkomku.pythonanywhere.com/"
+
+print("Socket URL: " + SOCKET_URL)
+
+
+# untuk game tic tac toe
+from pusher import pusher
+
+pusher = pusher_client = pusher.Pusher(
+  app_id='1438025',
+  key='6cbaada072aee9628f09',
+  secret='eb0a40a10746305b4b40',
+  cluster='ap1',
+  ssl=True
+)
+
+# pusher = pusher_client = pusher.Pusher(
+#   app_id='PUSHER_APP_ID',
+#   key='PUSHER_APP_KEY',
+#   secret='PUSHER_APP_SECRET',
+#   cluster='PUSHER_APP_CLUSTER',
+#   ssl=True
+# )
+
+name = ''
+
+
 
 app = Flask(__name__, static_folder='static')
 # run_with_ngrok(app)  # Start ngrok when app is run
 # CORS(app)
 CORS(app, resources=r'/api/*')
+# CORS(app, resources=r'/*')
+# CORS(app)
 
 # app.debug = False
 app.secret_key = 'graf^&&*(&^(BJH#BJH#G#VB#Bey89nkGBGUY_ap938255bnkerfuyfsdfbsdmnfsdfpkom'
+
+# app.secret_key = secrets.token_bytes(32) # used to cryptographically sign session cookies
+
+# socket = SocketIO(app, cors_allowed_origins="*")
+# Single entry in rooms:
+#
+# <room key> : {
+#   'world': <name of world>,
+#   'board': <chess.Board>,
+#   'users': {
+#       <name>: <position ([x, y, z])>,
+#       ...
+#   },
+#   'info': {
+#       'white': <name of white player>,
+#       'black': <name of black player>,
+#       'num_users': <number of users in room>
+#   }
+# }
+class State:
+    rooms = {}
+
+############ start Flask routes tic tac toe: ############
+@app.route('/')
+def ttt_index():
+  return render_template('ttt_index.html')
+
+@app.route('/play')
+def play():
+  global name
+  name = request.args.get('username')
+  return render_template('ttt_play.html')
+
+@app.route("/pusher/auth", methods=['POST'])
+def pusher_authentication():
+  auth = pusher.authenticate(
+    channel=request.form['channel_name'],
+    socket_id=request.form['socket_id'],
+    custom_data={
+      u'user_id': name,
+      u'user_info': {
+        u'role': u'player'
+      }
+    }
+  )
+  return json.dumps(auth)
+
+
+############ end Flask routes tic tac toe: ############
+
+############ start Flask routes sekak: ############
+
+# @app.route('/catur')
+# @app.route('/')
+@app.route('/catur_index')
+def catur_index():
+    return render_template('catur_index.html')
+
+# contoh game sekak atau catur
+@app.route('/gim')
+def draw_catur():
+    return SOCKET_URL
+
+@app.route('/<room_key>')
+def game(room_key):
+    if room_key in State.rooms:
+        session['room_key'] = room_key
+        world = State.rooms[room_key]['world']
+        return render_template('catur_game.html', room_key=room_key, world=world, socket_url=SOCKET_URL)
+    else:
+        return 'Game does not exist', 404
+
+@app.route('/get_room', methods=['GET'])
+def get_room():
+    room_key = request.values.get("roomKey")
+    if room_key in State.rooms:
+        return 'success'
+    else:
+        return ''
+
+@app.route('/create_room', methods=['POST'])
+def create_room():
+    world = request.values.get("world")
+
+    # delete any rooms with no users
+    for key in list(State.rooms.keys()):
+        if State.rooms[key]['info']['num_users'] == 0:
+            del State.rooms[key]
+            print('Room {} closed!'.format(key))
+
+    # create new room
+    room_key = uuid.uuid1().hex[:6].upper()
+    session['room_key'] = room_key
+    State.rooms[room_key] = { 'world': world, 'board': chess.Board(), 'users': {}, 'info': { 'white': '', 'black': '', 'num_users': 0 } }
+    print('Room {} added!'.format(room_key))
+    return room_key
+
+@app.route('/validate_name', methods=['POST'])
+def validate_name():
+    room_key = request.values.get("roomKey")
+    name = request.values.get("name")
+    if name in State.rooms[room_key]['users']:
+        return ''
+    return 'success'
+
+
+############ SocketIO handlers: ############
+
+# # sent everytime board updates
+# def send_board(room_key):
+#     board_fen = State.rooms[room_key]['board'].fen()
+#     emit('board', board_fen, room=room_key)
+
+# # sent when game is drawn (3 fold repetition, 50 move rule)
+# def send_draw(room_key):
+#     if (State.rooms[room_key]['board'].can_claim_draw()):
+#         emit('draw', room=room_key)
+
+# # sent once when page loads, and everytime a user joins room
+# def send_info(room_key):
+#     emit('info', State.rooms[room_key]['info'], room=room_key)
+
+# # sent everytime a user moves
+# def send_users(room_key):
+#     emit('users', State.rooms[room_key]['users'], room=room_key)
+
+# @socket.on('join_room')
+# def on_join(data):
+#     name = data['name']
+#     session['name'] = name
+#     room_key = data['roomKey']
+#     join_room(room_key)
+
+#     room = State.rooms[room_key]
+#     room['users'][name] = (0, 0, 0)
+
+#     info = room['info']
+#     info['num_users'] += 1
+#     if info['white'] == '':
+#         info['white'] = name
+#     elif info['black'] == '':
+#         info['black'] = name
+
+#     send_info(room_key)
+
+#     # send board only to user who joined
+#     client = request.sid
+#     board_fen = State.rooms[room_key]['board'].fen()
+#     emit('init_board', board_fen, room=client)
+
+#     send_draw(room_key)
+#     emit('user_joined', {'username': name, 'numUsers': info['num_users']}, room=room_key)
+
+# # user automatically leaves room when disconnecting
+# @socket.on('disconnect')
+# def on_disconnect():
+#     room_key = session['room_key']
+#     room = State.rooms[room_key]
+#     info = room['info']
+#     if 'name' in session:
+#         name = session['name']
+#         info['num_users'] -= 1
+#         if info['white'] == name:
+#             info['white'] = ''
+#         elif info['black'] == name:
+#             info['black'] = ''
+
+#         del room['users'][name]
+
+#         send_info(room_key)
+#         emit('user_left', {'username': name, 'numUsers': info['num_users']}, room=room_key)
+
+#     # empty session globals
+#     if 'name' in session:
+#         session['name'] = ''
+#     if 'room_key' in session:
+#         session['room_key'] = ''
+
+#     # if no clients in room, close room
+#     if info['num_users'] == 0:
+#         close_room(room_key)
+#         del State.rooms[room_key]
+#         print('Room {} closed!'.format(room_key))
+
+# @socket.on('update_board')
+# def on_update_board(data):
+#     room_key = data['roomKey']
+#     move = chess.Move.from_uci(data['move'])
+#     State.rooms[room_key]['board'].push(move)
+#     # send move (to move 3D piece)
+#     emit('move', data['move'], room=room_key)
+
+#     send_board(room_key)
+#     send_draw(room_key)
+
+# @socket.on('users_init')
+# def on_users_init(room_key):
+#     client = request.sid
+#     emit('users_init', State.rooms[room_key]['users'], room=client) # send to only client who just joined
+
+# @socket.on('update_position')
+# def on_update_position(data):
+#     room_key = data['roomKey']
+#     name = data['name']
+#     position = data['position']
+#     State.rooms[room_key]['users'][name] = position
+#     send_users(room_key)
+
+# @socket.on('message_in')
+# def on_new_message(data):
+#     name = data['name']
+#     room_key = data['roomKey']
+#     msg = data['message']
+#     emit('message_out', {'username': name, 'message': msg}, room=room_key)
+
+
+############ end Flask routes sekak: ############
+
+
+############ Flask routes general: ############
 
 # @app.route("/")
 # def index():
 #     return render_template("index.html")
 #     return 'Hello MK Grafika Komputer Filkom UB 2022 :D'
 
-@app.route("/")
+@app.route("/loginQ")
 def index():
     return redirect(url_for("login"))
 
@@ -93,10 +355,15 @@ def draw_quadcolor():
 def draw_rotasisegitiga():
     return render_template('draw_rotasisegitiga.html')
 
-# contoh membuat objek kubus berotasi
+# contoh membuat objek kubus berotasi, mode color tiap face
 @app.route('/rotasicube')
 def draw_rotasicube():
     return render_template('draw_rotasicube.html')
+
+# contoh membuat objek kubus mode color tiap vertex
+@app.route('/rotasicube2')
+def draw_rotasicube2():
+    return render_template('draw_rotasicube2.html')
 
 # contoh membuat multi objek
 @app.route('/multiobjek')
@@ -173,6 +440,33 @@ def draw_cahaya2():
 @app.route('/anim_pso')
 def draw_anim_pso():
     return render_template('draw_animasi_optimasi.html')
+
+# contoh membuat model loading & Curve part 1
+@app.route('/3d')
+def draw_model_loading():
+    return render_template('draw_model_loading_n_curve.html')
+
+# contoh membuat model loading & Curve part 2
+@app.route('/fractal')
+def draw_fractal():
+    return render_template('draw_fractal2.html')
+
+
+# contoh membuat dashboard smart infografis
+@app.route('/ui')
+def draw_ui():
+    return render_template('draw_dashboard1.html')
+
+# contoh membuat dashboard smart infografis
+@app.route('/ui2')
+def draw_ui2():
+    return render_template('draw_dashboard2.html')
+
+# contoh membuat dashboard smart infografis
+@app.route('/ui3')
+def draw_ui3():
+    return render_template('draw_dashboard3.html')
+
 
 
 # contoh membuat plot sequence dna sample
@@ -827,6 +1121,526 @@ def convert_dna():
     # return seq_sars_cov_1__;
     # atau
     # return string_seq_dna;
+
+# Ref:
+# [0] https://learnopengl.com/Getting-started/Shaders
+# [1] https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html
+#
+# Jika memang WebGL Anda menggunakan Shader,
+# maka dibutuhkan 2 shader (semacam variabel dan fungsi untuk manipulasi) yaitu vertex shader dan fragment shader yang membentuk 1 pasang shader,
+# dan aplikasi yang dibuat dapat memiliki lebih dari 1 pasang shader.
+#
+# Tentang Vertex Shader:
+# Vertex shader digunakan untuk memanipulasi per vertex untuk variabel global tertentu, misal gl_Position ke beberapa koordinat clip space.
+# void main() {
+#   gl_Position = buatkodingbasedMathUtkDikirimkanHasilManipulasinyaKeClipspaceCoordinates
+# }
+#
+#
+# Vertex shader mendapatkan data dengan 3 cara, yaitu:
+# 1. Atribut (data yang diambil dari hasil buffer).
+#    > pertama buat data buffer, dengan var buf = gl.createBuffer();
+#    > lalu masukkan data Anda pada buffer tersebut, misal dengan
+#        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+#        gl.bufferData(gl.ARRAY_BUFFER, someData, gl.STATIC_DRAW);
+#    > set variabel program Shader untuk mencari lokasi attributes saat proses inisialisasi, misal dengan
+#        var positionLoc = gl.getAttribLocation(someShaderProgram, "a_position");
+#    > memberi tahu WebGL untuk cara mengirimkan data (data out) dari buffer ke dalam attribute pada Shader, misal dengan
+#       // mengaktifkan pengiriman data buffer dari local WebGL env ke attribute pada env Shader
+#       gl.enableVertexAttribArray(positionLoc);
+#       var numComponents = 3;  // (x, y, z)
+#       var type = gl.FLOAT;    // 32bit floating point values
+#       var normalize = false;  // dilakukan normalisasi atau nilai digunakan apa adanya
+#       var offset = 0;         // nilai start untuk awal buffer
+#       var stride = 0;         // berapa banyak bytes untuk berpidah ke next vertex
+#                               // 0 = gunakan nilai yang benar pada stride berdasarkan type dan numComponents
+#       gl.vertexAttribPointer(positionLoc, numComponents, type, normalize, stride, offset);
+#    > menangkap hasil data buffer pada Shader dan membuat koding matematika di shader sesuai kebutuhan atau
+#      misal dalam contoh ini hanya meneruskan data buffer saja, misal dengan
+#       // attribute dapat menggunakan tipe float, vec2, vec3, vec4, mat2, mat3, dan mat4.
+#       attribute vec4 a_position;
+#       void main() {
+#         gl_Position = a_position;
+#       }
+#
+#
+#
+# 2. Uniforms (nilai yang tetap sama untuk semua titik data (vertek) dari satu panggilan proses draw atau draw call)
+#    shader uniform merupakan nilai yang diteruskan ke shader yang nilainya tetap sama untuk semua vertex dalam draw call.
+#    Contohnya,  menambahkan variabel offset (nilai awal data buffer atau variabel utk mengimbangi setiap simpul dengan jumlah tertentu)
+#    ke code vertex shader attribute dari contoh sebelumnya, misal dengan
+#    ////////////////////////////////////
+#       attribute vec4 a_position;
+#       void main() {
+#         gl_Position = a_position;
+#       }
+#    ////////////////////////////////////
+#    menjadi
+
+#       attribute vec4 a_position;
+#       uniform vec4 u_offset;
+#       void main() {
+#         gl_Position = a_position + u_offset;
+#       }
+#    > pertama, set variabel program Shader untuk mencari lokasi Uniforms saat proses inisialisasi, misal dengan
+#       var offsetLoc = gl.getUniformLocation(someProgram, "u_offset");
+#    > lalu sebelum proses draw, dapat terlebih dahulu diset nilai uniform-nya, misal dengan
+#       gl.uniform4fv(offsetLoc, [1, 0, 0, 0]); // offset ke bagian kanan layar
+#      Uniforms memiliki beberapa macan tipe data, gunakan sesuai kebutuhan Anda, berikut detailnya:
+#       gl.uniform1f (floatUniformLoc, v); // untuk nilai skalar float
+#       gl.uniform1fv(floatUniformLoc, [v]); // untuk array float atau float
+#       gl.uniform2f (vec2UniformLoc, v0, v1); // untuk vec2
+#       gl.uniform2fv(vec2UniformLoc, [v0, v1]); // untuk array vec2 atau vec2
+#       gl.uniform3f (vec3UniformLoc, v0, v1, v2); // untuk vec3
+#       gl.uniform3fv(vec3UniformLoc, [v0, v1, v2]); // untuk array vec3 atau vec3
+#       gl.uniform4f (vec4UniformLoc, v0, v1, v2, v4); // untuk vec4
+#       gl.uniform4fv(vec4UniformLoc, [v0, v1, v2, v4]); // untuk array vec4 atau vec4
+
+#       gl.uniformMatrix2fv(mat2UniformLoc, false, [ array elemen 4x ]) // untuk array mat2 atau mat2
+#       gl.uniformMatrix3fv(mat3UniformLoc, false, [ array elemen 9x ]) // untuk array mat3 atau mat3
+#       gl.uniformMatrix4fv(mat4UniformLoc, false, [ 16x elemen larik ]) // untuk larik mat4 atau mat4
+
+#       gl.uniform1i (intUniformLoc, v); // untuk nilai skalar int
+#       gl.uniform1iv(intUniformLoc, [v]); // untuk int atau int array
+#       gl.uniform2i (ivec2UniformLoc, v0, v1); // untuk ivec2
+#       gl.uniform2iv(ivec2UniformLoc, [v0, v1]); // untuk array ivec2 atau ivec2
+#       gl.uniform3i (ivec3UniformLoc, v0, v1, v2); // untuk ivec3
+#       gl.uniform3iv(ivec3UniformLoc, [v0, v1, v2]); // untuk array ivec3 atau ivec3
+#       gl.uniform4i (ivec4UniformLoc, v0, v1, v2, v4); // untuk ivec4
+#       gl.uniform4iv(ivec4UniformLoc, [v0, v1, v2, v4]); // untuk array ivec4 atau ivec4
+#
+#       gl.uniform1i (sampler2DUniformLoc, v); // untuk sampler2D (tekstur)
+#       gl.uniform1iv(sampler2DUniformLoc, [v]); // untuk array sampler2D atau sampler2D
+#
+#       gl.uniform1i (samplerCubeUniformLoc, v); // untuk samplerCube (tekstur)
+#       gl.uniform1iv(samplerCubeUniformLoc, [v]); // untuk array samplerCube atau samplerCube
+#
+#    > pada shader uniform, ada juga tipe bool, bvec2, bvec3, and bvec4 yang menggunakan fungsi gl.uniform?f? atau gl.uniform?i?
+#      contoh pengaturan "semua uniform array".
+#      // in shader
+#      uniform vec2 u_someVec2[3];
+#
+#      // in JavaScript at init time
+#      var someVec2Loc = gl.getUniformLocation(someProgram, "u_someVec2");
+#
+#      // at render time
+#      gl.uniform2fv(someVec2Loc, [1, 2, 3, 4, 5, 6]);  // set the entire array of u_someVec2
+#
+#    > Dapat diatur juga untuk "tiap elemen individual dari array", satu per satu sesuai lokasinya, seperti berikut:
+#
+#      // in JavaScript at init time
+#      var someVec2Element0Loc = gl.getUniformLocation(someProgram, "u_someVec2[0]");
+#      var someVec2Element1Loc = gl.getUniformLocation(someProgram, "u_someVec2[1]");
+#      var someVec2Element2Loc = gl.getUniformLocation(someProgram, "u_someVec2[2]");
+
+#      // at render time
+#      gl.uniform2fv(someVec2Element0Loc, [1, 2]);  // set element 0
+#      gl.uniform2fv(someVec2Element1Loc, [3, 4]);  // set element 1
+#      gl.uniform2fv(someVec2Element2Loc, [5, 6]);  // set element 2
+#
+#      >> berikut contoh jika dibuat dengan struct,
+#         struct SomeStruct {
+#           bool active;
+#           vec2 someVec2;
+#         };
+#
+#         uniform SomeStruct u_someThing;
+#
+#      >> maka untuk setiap individu dicari sesuai field-nya, misal dengan
+#         var someThingActiveLoc = gl.getUniformLocation(someProgram, "u_someThing.active");
+#         var someThingSomeVec2Loc = gl.getUniformLocation(someProgram, "u_someThing.someVec2");
+#
+# 3. Textures (data yang diambil dari piksel/texel), berhubungan dengan Fragment Shader
+#
+# Tentang Fragment Shader
+# Pengaturan tekstur di Vertex Shaders menggunakan Fragment Shader.
+# Intinya Fragment Shader bertugas memberikan warna untuk piksel saat ini yang sedang diraster,
+# di mana piksel ini bisa merupakan kumpulan dari beberapa vertex, misal dengan
+#
+# ///////////////////////
+# precision mediump float;
+# void main() {
+#    gl_FragColor = buatkodingbasedMathUtkMakeAColor;
+# }
+# ///////////////////////
+#
+# Shader fragmen dipanggil sekali per piksel.
+# Setiap dipanggil, maka diminta set variabel global khusus, misal dengan gl_FragColor untuk set tekstur warna.
+#
+# Fragment shader mendapatkan data dengan 3 cara, yaitu:
+#
+# 1. Uniforms (nilai yang tetap sama untuk setiap piksel data (kumpulan vertek) dari satu panggilan proses draw atau draw call)
+#    > Uniforms di Fragment Shaders, penjelasannya sama dengan Uniforms  di Vertex Shader sebelumnya.
+# 2. Textures (data yang diambil dari piksel/texel)
+#    Textures  dalam Shader Fragmen, cara get nilai tekstur di shader, yaitu misal dengan membuat sampler2D uniform
+#    dan menggunakan fungsi texture2D dari GLSL untuk mengekstrak nilainya. Berikut conthnya
+#    ///////////////////////////
+#    precision mediump float;
+#    uniform sampler2D u_texture;
+#    void main() {
+#      vec2 texcoord = vec2(0.5, 0.5)  // mendapatkan nilai dari nilai tengah tekstur
+#      gl_FragColor = texture2D(u_texture, texcoord);
+#    }
+#    ///////////////////////////
+#
+#   Hasil keluaran data texture bergantung banyak pengaturan. Minimal telah dibuat dan diletakkan nilai texture di variabel data, misal
+#   ///////////////////////////
+#   var tex = gl.createTexture();
+#   gl.bindTexture(gl.TEXTURE_2D, tex);
+#   var level = 0;
+#   var width = 2;
+#   var height = 1;
+#   // set untuk informasi data warna dgn interval [0;255]
+#   var data = new Uint8Array([
+#       255, 0, 0, 255,   // a red pixel
+#       0, 255, 0, 255,   // a green pixel
+#   ]);
+#   gl.texImage2D(gl.TEXTURE_2D, level, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+#   ///////////////////////////
+#
+#   Contoh melakukan filtering pada tekstur:
+#   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+#
+#   Contoh saat inisialisasi, search nama variabel "uniform location" pada program shader:
+#   var someSamplerLoc = gl.getUniformLocation(someProgram, "u_texture");
+#
+#   Saat proses render, ikat texture (bind the texture) ke unit texture:
+#   var unit = 5; // Pilih beberapa unit tekstur
+#   gl.activeTexture(gl.TEXTURE0 + unit);
+#   gl.bindTexture(gl.TEXTURE_2D, tex);
+#
+#   Lalu informasikan kepada shader, variabel unit mana yang telah Anda ikat texture-nya:
+#   gl.uniform1i(someSamplerLoc, unit);
+#
+# 3. Varyings (data dilewatkan dari vertex shader lalu dilakukan proses interpolasi)
+#    Varyings adalah cara mengirimkan nilai variabel dari vertex shader ke fragment shader, yang keduanya telah dibahas sebelumnya.
+#    Untuk menggunakan Varyings, butuh dideklarasikan pencocokan nama variabel (matching varyings) pada vertex shader maupun fragment shader.
+#    Pada dapat dikonfigursi untuk set suatu nilai Varyings pada vertex shader dengan banyak nilai per vertex.
+#    Saat WebGL draw piksel,  maka dilakukan interpolasi antara nilai-nilai tersebut dan meneruskannya ke varying yang sesuai pada fragment shader.
+#    Berikut contoh rangkaian kodenya:
+#
+#    Contoh isi Vertex shader
+#    ///////////////////////////
+#    attribute vec4 a_position;
+#    uniform vec4 u_offset;
+#    varying vec4 v_positionWithOffset;
+#    void main() {
+#      gl_Position = a_position + u_offset;
+#      v_positionWithOffset = a_position + u_offset;
+#    }
+#    ///////////////////////////
+#
+#    Contoh isi Fragment shader
+#    ///////////////////////////
+#    precision mediump float;
+#    varying vec4 v_positionWithOffset;
+#    void main() {
+#      // convert from clip space (-1 <-> +1) to color space (0 -> 1).
+#      vec4 color = v_positionWithOffset * 0.5 + 0.5
+#      gl_FragColor = color;
+#    }
+#    ///////////////////////////
+#
+#    Contoh di atas merupakan contoh yang sederhana, karena secara langsung menyalin nilai clip space ke fragmen shader dan menggunakannya sebagai warna.
+#    Namun kode tersebut akan tetap berjalan menghasilkan warna sesuai logika yang dibangun.
+#
+# 3. Textures (data yang diambil dari piksel/texel), berhubungan dengan Fragment Shader
+
+#
+# OpenGL Shading Language atau Graphics Library Shader Language (GLSL) merupakan bahasa shading tingkat tinggi atau bagian dari Shader
+# yang memiliki fitur khusus seperti variabel input dan output, set variabel uniform dan fungsi utama lainnya
+# sehingga mampu memanfaatkan GPU dengan sintaks bahasa C untuk mengolah data grafis berbasis vektor dan matriks.
+# Sifatnya seperti terisolir, karena komunikasi input dan outputnya seolah secara tidak langsung ke kode program utama,
+# misal pada WebGL yang menggunakan Js.
+#
+# Selain itu, GLSL merupakan bahasa shader yang dapat ditulis langsung dalam program shader, yang memiliki beberapa fitur unik karena tidak umum seperti di JavaScript.
+# Fitur tersebut dirancang untuk membangun logika koding atau matematika untuk rasterisasi grafik atau general purpose,
+# misal untuk implementasi algoritma Artificial Intelligent (AI), Machine Learning (ML) dan Deep Learning.
+# GLSL memiliki tipe data seperti vec2, vec3, dan vec4 yang masing-masing mewakili vektor 2 nilai, 3 nilai, dan 4 nilai.
+# Dan juga tipe data mat2, mat3 dan mat4 yang mewakili matriks 2x2, 3x3, dan 4x4.
+# Serta developerpun dapat melakukan operasi komputasi seperti mengalikan vec dengan skalar, dll.
+# > Contoh Perkalian vec dgn skalar
+#   ///////////////////////////////////
+#   vec4 a = vec4(1, 2, 3, 4);
+#   vec4 b = a * 2.0;
+#   // b is now vec4(2, 4, 6, 8);
+#   ///////////////////////////////////
+#
+# > Contoh Perkalian antar matrik dan vec
+#   ///////////////////////////////////
+#   mat4 a = ???
+#   mat4 b = ???
+#   mat4 c = a * b;
+#   vec4 v = ???
+#   vec4 y = c * v;
+#   ///////////////////////////////////
+#
+# > Contoh sintaks singkat,
+#   ///////////////////////////////////
+#   vec4 v;
+#   yang memiliki arti sama dengan
+#   v.x sama dengan v.s dan v.r dan v[0].
+#   v.y sama dengan v.t dan v.g dan v[1].
+#   v.z sama dengan v.p dan v.b dan v[2].
+#   v.w sama dengan v.q dan v.a dan v[3].
+#   ///////////////////////////////////
+#
+# > Contoh sintaks untuk memutar / menukar / mengulang nilai elemen vec
+#   ///////////////////////////////////
+#   menyambung dari vec4 v;
+#   v.yyyy
+#   sama dengan
+#   vec4(v.y, v.y, v.y, v.y)
+#
+#   Demikian pula
+#   v.bgra
+#   sama dengan
+#   vec4(v.b, v.g, v.r, v.a)
+#   ///////////////////////////////////
+#
+# > Contoh dalam mendeklarasikan vec atau mat, dapat disediakan beberapa bagian sekaligus
+#   ///////////////////////////////////
+#   vec4(v.rgb, 1)
+#   sama dengan
+#   vec4(v.r, v.g, v.b, 1)
+#
+#   Demikian pula
+#   vec4(1)
+#   sama dengan
+#   vec4(1, 1, 1, 1)
+#   ///////////////////////////////////
+#
+# Karena GLSL sangat strict atau ketat, misal dalam menyusun tipe data, maka harus sangat diperhatikan, berikut
+# > Contoh yang salah.
+#   ///////////////////////////////////
+#   float f = 1;  // ERROR 1, karena int.harus diganti atau di-casting ke float
+#   ///////////////////////////////////
+#
+# > Contoh yang benar,
+#   ///////////////////////////////////
+#   float f = 1.0; // gunakan tipe float
+#   float f = float(1) // int di-casting ke float
+#   ///////////////////////////////////
+#
+# Contoh di atas dari vec4(v.rgb, 1) tidak ada error terkait nilai 1,
+# karena vec4 secara otomatis telah melakukan casting seperti float(1).
+# > Contoh banyak fungsi bawaan dari GLSL yang sekaligus dapat beroperasi pada beberapa komponen.
+#   ///////////////////////////////////
+#   T sin(T angle)
+#   T bisa berupa float, vec2, vec3 atau vec4. Di mana jika T adalah vec4, maka v adalah vec4, misal
+#   vec4 s = sin(v);
+#   sama dengan
+#   vec4 s = vec4(sin(v.x), sin(v.y), sin(v.z), sin(v.w));
+#   ///////////////////////////////////
+#
+# > Contoh ada satu argumen float dan lainnya T, ini maknanya float akan diterapkan sesuai letak argumennya ke semua komponen. Misal v1 dan v2 adalah vec4 dan f adalah float maka
+#   ///////////////////////////////////
+#   vec4 m = mix(v1, v2, f);
+#   sama dengan
+#   vec4 m = vec4(
+#   mix(v1.x, v2.x, f),
+#   mix(v1.y, v2.y, f),
+#   mix(v1.z, v2.z, f),
+#   mix(v1.w, v2.w, f));
+#   ///////////////////////////////////
+#
+# ============================================================================
+#
+# contoh memanfaatkan glsl pada webgl untuk membuat hasil garis persamaan
+# dengan algoritma regresi linear (reglin)
+# di mana Verteks diproses menggunakan OpenGL Shading Language (GLSL) atau disebut dengan vertex shader,
+# menggunakan skrip dengan tipe x-shader/x-vertex.
+@app.route('/plotreglin_dgn_glsl')
+def draw_plotreglin_dgn_glsl():
+
+    import os.path
+    import pandas as pd
+    # import numpy as np
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # contoh load data yang akan dibuat regresi linier:
+    # ---------------
+    # Load data Dataset Usia dan Rating Efektifitas Vaksin dll.csv
+    #
+    # Sumber: bahan ajar P. Imam
+    #
+
+    # misal dari sekian banyak fitur, hanya diambil 2 fitur
+    # x = usia, dan y = rating_efektifitas_hasil_vaksinasi
+    file_path = os.path.join(BASE_DIR, "static/data_regresi/Dataset Usia dan Rating Efektifitas Vaksin dll.csv")
+    dataset = pd.read_csv(file_path)
+
+    x = dataset['usia'].values
+    y = dataset['rating_efektifitas_hasil_vaksinasi'].values
+
+
+    koordinat_x_y_z = ''
+    len_loop = 0
+    for in_x,in_y in zip(x,y):
+        koordinat_x = str(in_x)
+        koordinat_y = str(in_y)
+        koordinat_z = str(0)
+
+        # if(len_loop==0):
+        #     koordinat_x_y_z += '('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+        # else:
+        #     koordinat_x_y_z += ',('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+        # len_loop += 1
+
+        if(len_loop==0):
+            koordinat_x_y_z += koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+        else:
+            koordinat_x_y_z += ','+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+
+        len_loop += 1
+
+
+
+
+    # ---------------------------------------------------------------------------------------------------------
+
+    # x_str = ','.join(str(in_x) for in_x in x) # '0,3,5'
+    # y_str = ','.join(str(in_y) for in_y in y) # '0,3,5'
+
+    # return x_str + ' || ' + y_str;
+
+
+    # menampilkan hasil konversi ke x,y,z
+    # return koordinat_x_y_z;
+
+
+    mylist_koordinat_x_y_z = koordinat_x_y_z.replace(' ','').split(',')
+    return render_template('draw_regresi_linier_dgn_glsl.html', coords_xyz = mylist_koordinat_x_y_z)
+
+@app.route('/plotreglin_non_glsl')
+def draw_plotreglin_non_glsl():
+
+    import os.path
+    import pandas as pd
+    # import numpy as np
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # contoh load data yang akan dibuat regresi linier:
+    # ---------------
+    # Load data Dataset Usia dan Rating Efektifitas Vaksin dll.csv
+    #
+    # Sumber: bahan ajar P. Imam
+    #
+
+    # misal dari sekian banyak fitur, hanya diambil 2 fitur
+    # x = usia, dan y = rating_efektifitas_hasil_vaksinasi
+    file_path = os.path.join(BASE_DIR, "static/data_regresi/Dataset Usia dan Rating Efektifitas Vaksin dll.csv")
+    dataset = pd.read_csv(file_path)
+
+    x = dataset['usia'].values
+    y = dataset['rating_efektifitas_hasil_vaksinasi'].values
+
+
+    koordinat_x_y_z = ''
+    len_loop = 0
+    for in_x,in_y in zip(x,y):
+        koordinat_x = str(in_x)
+        koordinat_y = str(in_y)
+        koordinat_z = str(0)
+
+        # if(len_loop==0):
+        #     koordinat_x_y_z += '('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+        # else:
+        #     koordinat_x_y_z += ',('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+        # len_loop += 1
+
+        if(len_loop==0):
+            koordinat_x_y_z += koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+        else:
+            koordinat_x_y_z += ','+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+
+        len_loop += 1
+
+
+
+
+    # ---------------------------------------------------------------------------------------------------------
+
+    # x_str = ','.join(str(in_x) for in_x in x) # '0,3,5'
+    # y_str = ','.join(str(in_y) for in_y in y) # '0,3,5'
+
+    # return x_str + ' || ' + y_str;
+
+
+    # menampilkan hasil konversi ke x,y,z
+    # return koordinat_x_y_z;
+
+
+    mylist_koordinat_x_y_z = koordinat_x_y_z.replace(' ','').split(',')
+    return render_template('draw_regresi_linier_dgn_non_glsl.html', coords_xyz = mylist_koordinat_x_y_z)
+
+
+@app.route('/reglin')
+def draw_reglin():
+
+    import os.path
+    import pandas as pd
+    # import numpy as np
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # contoh load data yang akan dibuat regresi linier:
+    # ---------------
+    # Load data Dataset Usia dan Rating Efektifitas Vaksin dll.csv
+    #
+    # Sumber: bahan ajar P. Imam
+    #
+
+    # misal dari sekian banyak fitur, hanya diambil 2 fitur
+    # x = usia, dan y = rating_efektifitas_hasil_vaksinasi
+    file_path = os.path.join(BASE_DIR, "static/data_regresi/Dataset Usia dan Rating Efektifitas Vaksin dll.csv")
+    dataset = pd.read_csv(file_path)
+
+    x = dataset['usia'].values
+    y = dataset['rating_efektifitas_hasil_vaksinasi'].values
+
+
+    koordinat_x_y_z = ''
+    len_loop = 0
+    for in_x,in_y in zip(x,y):
+        koordinat_x = str(in_x)
+        koordinat_y = str(in_y)
+        koordinat_z = str(0)
+
+        if(len_loop==0):
+            koordinat_x_y_z += '('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+        else:
+            koordinat_x_y_z += ',('+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z + ')'
+        len_loop += 1
+
+        # if(len_loop==0):
+        #     koordinat_x_y_z += koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+        # else:
+        #     koordinat_x_y_z += ','+ koordinat_x + ',' + koordinat_y + ',' + koordinat_z
+
+
+
+
+    # ---------------------------------------------------------------------------------------------------------
+
+    # x_str = ','.join(str(in_x) for in_x in x) # '0,3,5'
+    # y_str = ','.join(str(in_y) for in_y in y) # '0,3,5'
+
+    # return x_str + ' || ' + y_str;
+
+
+    # menampilkan hasil konversi ke x,y,z
+    return koordinat_x_y_z;
+
+
+    # mylist_koordinat_x_y_z = koordinat_x_y_z.replace(' ','').split(',')
+    # return render_template('draw_regresi_linier_dgn_glsl.html', coords_xyz = mylist_koordinat_x_y_z)
+
+@app.route('/quadshader')
+def draw_quadshader():
+    return render_template('draw_quad_shadertoy.html')
 
 @app.route('/menu')
 def menugrafkom():
@@ -1852,3 +2666,6 @@ if __name__ == '__main__':
              # Runtime > Manage Sessions > Terminate Other Sessions
   # app.run(host='0.0.0.0', port=5004)  # If address is in use, may need to terminate other sessions:
              # Runtime > Manage Sessions > Terminate Other Sessions
+    # socket.run(app, debug=True)
+
+name = ''

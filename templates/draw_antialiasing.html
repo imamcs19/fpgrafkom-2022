@@ -255,6 +255,11 @@ function init() {
        gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
                              gl.ZERO, gl.ONE );
        gl.enable(gl.BLEND);
+
+    //   glEnable(GL_BLEND);
+    //   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+
+
        createPoints();
        animator = new Animator(doFrame);
    }

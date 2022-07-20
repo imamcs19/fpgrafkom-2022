@@ -1,0 +1,917 @@
+{% extends "extends/base.html" %}
+{% block title %}
+    <title>Web Data App</title>
+{% endblock title %}
+{{ self.title() }}
+    Home
+{{ self.title() }}
+<button onclick="window.location.href='/'" class="btn btn-outline btn-rounded btn-info">
+    <i class="ti-arrow-left m-l-5"></i>
+    <span>Back Home</span>
+</button> Project 1
+
+{{ self.title() }}
+    Project 1
+
+{% block content %}
+
+  <canvas id="rttCanvas" style="display:none" width="1024" height="1024"></canvas>
+  <!-- <canvas id="rttCanvas" style="display:none" width="100%"></canvas> -->
+
+  <canvas id="webGLcanvas" style='position: absolute; left: 0px; top: 0px;' ></canvas>
+  <div id="hud" ng-controller="hudController">
+    <div id="fps" style='position: absolute; right: 5px; top: 5px;'><font color="white">{{ fps }}</font></div>
+  </div>
+
+  <!--- Cara memanggil Lib. helper WebGL dari file *.js --->
+  <!--                                                  -->
+  <!-- Remodified by Imam Cholissodin | Filkom UB -->
+  <!-- Tgl 20 Juni – 15 Juli 2022 -->
+  <!------------------------------------------------------------->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_text_render/gl-matrix-min.js') }}"></script>-->
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_text_render/angular.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_text_render/vertexBufferObject.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_multiobjek/MV.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_multiobjek/InitShaders.js') }}"></script>
+
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_viewing/basicObject3D.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_viewing/gl-matrix-min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_viewing/glutil.js') }}"></script>
+
+
+  <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+
+    varying vec3 vTextureCoord;
+
+    void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+  </script>
+
+  <script id="shader-fs" type="x-shader/x-fragment">
+      precision mediump float;
+
+      uniform sampler2D sTexture;
+      varying vec3 vTextureCoord;
+
+      /*void main(void) {
+          gl_FragColor = texture2D(sTexture, vTextureCoord.st);
+      }*/
+
+  </script>
+
+  <script id="vertex-shader" type="x-shader/x-vertex">
+    attribute vec4 vPosition;
+    uniform float theta;
+
+    void main()
+    {
+        // rumus transformasi sesuai konsep rotasi
+        float s = sin( theta );
+        float c = cos( theta );
+
+        gl_Position.x = -s * vPosition.x + c * vPosition.y;
+        gl_Position.y =  s * vPosition.y + c * vPosition.x;
+        gl_Position.z = 0.0; // artinya diputar terhadap sumbu Z
+        gl_Position.w = 2.0; // untuk set seperti lebar windownya koordinat x,y
+    }
+    </script>
+
+
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+
+    precision mediump float;
+
+    void main()
+    {
+        gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+    }
+    </script>
+
+  <!--menyiapkan shader untuk viewing, untuk v => vextex dan f => fragment-->
+  <script type="x-shader/x-vertex" id="vshader">
+     attribute vec3 vertexCoords;
+     attribute vec3 normalCoords;
+     uniform mat4 modelview;
+     uniform mat4 projection;
+     varying vec3 viewCoords;
+     varying vec3 normal;
+     void main() {
+        vec4 coords = modelview*vec4(vertexCoords,1.0);
+        viewCoords = coords.xyz;
+        gl_Position = projection * coords;
+        normal = normalCoords;
+     }
+    </script>
+
+    <script type="x-shader/x-fragment" id="fshader">
+         precision mediump float;
+         struct materialProperties {
+            vec3 ambient;
+            vec3 diffuse;
+            vec3 specular;
+            vec3 emissive;
+            float shininess;
+         };
+         struct lightProperties {
+            vec4 position;
+            vec3 intensity;
+            vec3 ambient;
+            bool enabled;
+         };
+         uniform materialProperties material;
+         uniform lightProperties light[8];
+         uniform mat3 normalTransform;
+         uniform bool lit;
+         uniform vec3 globalAmbient;
+         varying vec3 viewCoords;
+         varying vec3 normal;
+         vec3 lighting(vec3 vertex, vec3 V, vec3 N) {
+            vec3 color = material.emissive + material.ambient * globalAmbient;
+            for (int i = 0; i < 8; i++) {
+                if (light[i].enabled) {
+                    color += material.ambient * light[i].ambient;
+                    vec3 L;
+                    if (light[i].position.w == 0.0)
+                       L = normalize( light[i].position.xyz );
+                    else
+                       L = normalize( light[i].position.xyz/light[i].position.w - vertex );
+                    if ( dot(L,N) > 0.0) {
+                       vec3 R;
+                       R = (2.0*dot(N,L))*N - L;
+                       color += dot(N,L)*(light[i].intensity*material.diffuse);
+                       if ( dot(V,R) > 0.0)
+                          color += pow(dot(V,R),material.shininess) * (light[i].intensity * material.specular);
+                    }
+                }
+            }
+            return color;
+         }
+         void main() {
+            if (lit) {
+               vec3 tnormal = normalize(normalTransform*normal);
+               if ( gl_FrontFacing == false )
+                  tnormal = -tnormal;
+               gl_FragColor = vec4(lighting(viewCoords, normalize(-viewCoords),tnormal),1.0);
+            }
+            else {
+               gl_FragColor = vec4(material.diffuse, 1.0);
+            }
+         }
+  </script>
+
+  <script type="text/javascript">
+
+    //untuk viewing
+	"use strict";
+
+    var gl;
+    var canvas;
+    var rttContext;
+    var texture;
+    var aspectRatio = 1;
+
+    var firstRenderInterval;
+    var startTime;
+    var lastTimeStamp;
+    var lastFpsTimeStamp;
+    var framesPerSecond = 0;
+    var frameCount = 0;
+    var rad = 0;
+
+    var hudScope;
+
+    var vbo = null;
+
+    //untuk var multiobjek
+    var theta = 0.0;
+	var thetaLoc;
+	var program;
+	var program1;
+	var rr_vPosition;
+	var sr_vPosition;
+	var rr_bufferId;
+	var sr_bufferId;
+
+	//untuk viewing
+	"use strict";
+
+    var gl;   // The webgl context, to be initialized in init().
+    var prog; // Identifies the webgl program.
+
+    var vertexAttributeLocation;
+    var normalAttributeLocation;
+    var modelviewUniformLocation;
+    var projectionUniformLocation;
+    var normalTransformUniformLocation;
+    var litUniformLocation;
+
+    var materialUniformLocation;
+    var lightUniformLocation;
+    var globalAmbientUniformLocation;
+
+    var projection = mat4.frustum(-10,10,-10,10,20,60);
+    var modelview;
+    var rotX = 0, rotY = 0;
+
+    var color = [1,1,1];
+
+    var world;
+    var torus1, sphere1, cube1, cone1, cylinder1;
+    var wheel, cart, horse1, horse2, merryGoRound;
+
+    var animator;
+
+     //---------------- simple scene graph implementation --------------------
+
+    /**
+     * A BasicObject3D creates a 3D object that is drawn using gl.drawElements(gl.TRIANGLES...).
+     * Can be used with one of the functions in this file; for example: new BasicObject3D(uvSphere(1)).
+     * An object, obj, of type BasicObject3D has the method obj.draw() that draws the object.
+     * @param modelData the data for the object, containing modelData.vertexPositions,
+     *    modelData.vertexNormals, modelData.vertexTextureCoords, and modelData.indices.
+     * @param gl the WebGL context where the object will be drawn.
+     * @param vertexAttribLoc the location of the vertex coordinate attribute in the shader program,
+     *    as returned by gl.getAttribLocation. The attribute must be of type vec3.
+     * @param normalAttribLoc the location of the normal vector attribute in the shader program,
+     *    as returned by gl.getAttribLocation. The attribute must be of type vec3.
+     * @param texCoordsAttribLoc the location of the normal vector attribute in the shader program,
+     *    as returned by gl.getAttribLocation. The attribute must be of type vec2.  If this parameter
+     *    is omitted or is false, then no texture coordinates are used when drawing.
+     */
+    function BasicObject3D(modelData, gl,
+                vertexAttribLoc, normalAttribLoc, /* optional */ texCoordsAttribLoc) {
+        var vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertexPositions), gl.STATIC_DRAW);
+        var normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertexNormals), gl.STATIC_DRAW);
+        var texCoordsBuffer = null
+        if (texCoordsAttribLoc) {
+           texCoordsBuffer = gl.createBuffer();
+           gl.bindBuffer(gl.ARRAY_BUFFER,texCoordsBuffer);
+           gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertexTextureCoords), gl.STATIC_DRAW);
+        }
+        var indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(modelData.indices), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        this.draw = function() {
+           gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+           gl.vertexAttribPointer(vertexAttribLoc, 3, gl.FLOAT, false, 0, 0);
+           gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
+           gl.vertexAttribPointer(normalAttribLoc, 3, gl.FLOAT, false, 0, 0);
+           if (texCoordsBuffer) {
+              gl.bindBuffer(gl.ARRAY_BUFFER,texCoordsBuffer);
+              gl.vertexAttribPointer(texCoordsAttribLoc, 2, gl.FLOAT, false, 0, 0);
+           }
+           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
+           gl.drawElements(gl.TRIANGLES, modelData.indices.length, gl.UNSIGNED_SHORT, 0);
+           gl.bindBuffer(gl.ARRAY_BUFFER, null);
+           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        }
+    }
+
+
+    function ComplexObject() {
+       this.rotation = null;
+       this.scaling = null;
+       this.translation = null;
+       this.ambientAndDiffuse = null;
+       this.specular = null;
+       this.emissive = null;
+       this.objects = [];
+       if (arguments.length > 0) {
+          for (var i = 0; i < arguments.length; i++)
+             this.add(arguments[i]);
+       }
+    }
+    ComplexObject.prototype.add = function() {
+       for (var i = 0; i < arguments.length; i++) {
+           if (arguments[i] instanceof ComplexObject || arguments[i] instanceof BasicObject3D)
+              this.objects.push(arguments[i]);
+           else
+              this.objects.push( new BasicObject3D(arguments[i], gl,
+                    vertexAttributeLocation, normalAttributeLocation))
+        }
+    }
+    ComplexObject.prototype.setScaling = function(sx,sy,sz) {
+       this.scaling = [ sx, sy, sz ];
+       return this;
+    }
+    ComplexObject.prototype.setTranslation = function(dx,dy,dz) {
+       this.translation = [ dx, dy, dz ];
+       return this;
+    }
+    ComplexObject.prototype.setRotation = function(angle, ax, ay, az) {
+       this.rotation = [ angle, ax, ay, az ];
+       return this;
+    }
+    ComplexObject.prototype.setColor = function(r,g,b) {
+       this.ambientAndDiffuse = [ r,g,b ];
+       this.specular = [r*0.25, g*0.25, b*0.25 ];
+       return this;
+    }
+    ComplexObject.prototype.drawObjects = function(modelview, material) {
+       var saveModelview = null;
+       if (this.rotation || this.scaling || this.translation) {
+          saveModelview = mat4.create(modelview);
+          if (this.translation)
+             mat4.translate(modelview, this.translation);
+          if (this.rotation)
+             mat4.rotate( modelview, this.rotation[0]/180*Math.PI, [this.rotation[1],this.rotation[2],this.rotation[3]]);
+          if (this.scaling)
+             mat4.scale(modelview, this.scaling);
+          gl.uniformMatrix4fv(modelviewUniformLocation, false, modelview );
+          gl.uniformMatrix3fv(normalTransformUniformLocation, false, mat3.transpose(mat4.toInverseMat3(modelview)) );
+       }
+       var saveAmbientAndDiffuse = material.ambientAndDiffuse;
+       var saveSpecular = material.saveSpecular;
+       var saveEmissive = material.saveEmissive;
+       material.ambientAndDiffuse = this.ambientAndDiffuse;
+       material.specular = this.specular;
+       material.emissive = this.emissive;
+       if (material.ambientAndDiffuse) {
+          gl.uniform3fv(materialUniformLocation.ambient, material.ambientAndDiffuse);
+          gl.uniform3fv(materialUniformLocation.diffuse, material.ambientAndDiffuse);
+       }
+       if (material.specular)
+          gl.uniform3fv(materialUniformLocation.specular, material.specular);
+       if (material.emissive)
+          gl.uniform3fv(materialUniformLocation.emissive, material.emissive);
+       for (var i = 0; i < this.objects.length; i++) {
+          if (this.objects[i] instanceof ComplexObject)
+             this.objects[i].drawObjects(modelview, material);
+          else if (this.objects[i] instanceof BasicObject3D) {
+             //this.objects[i].draw();
+             this.objects[i].drawScene();
+
+          }
+       }
+       material.ambientAndDiffuse = this.ambientAndDiffuse;
+       material.specular = this.specular;
+       material.emissive = this.emissive;
+       if (material.ambientAndDiffuse) {
+          gl.uniform3fv(materialUniformLocation.ambient, material.ambientAndDiffuse);
+          gl.uniform3fv(materialUniformLocation.diffuse, material.ambientAndDiffuse);
+       }
+       if (material.specular)
+          gl.uniform3fv(materialUniformLocation.specular, material.specular);
+       if (material.emissive)
+          gl.uniform3fv(materialUniformLocation.emissive, material.emissive);
+       if (saveModelview) {
+          mat4.set(saveModelview,modelview);
+          gl.uniformMatrix4fv(modelviewUniformLocation, false, modelview );
+          gl.uniformMatrix3fv(normalTransformUniformLocation, false, mat3.transpose(mat4.toInverseMat3(modelview)) );
+       }
+    }
+
+    function createWorld() {
+       world = new ComplexObject();
+
+          // Add a big, flat cylinder to represent the ground.
+          world.add(new ComplexObject(cylinder1)
+                           .setColor(0,0.5,0)
+                           .setScaling(30,30,1)
+                           .setRotation(90,-1,0,0)
+                           .setTranslation(0, -1, 0));
+
+          // Add a tree, consisting of a cone and a cylinder.
+
+          var tree = new ComplexObject();
+          tree.add(new ComplexObject(cone1).setScaling(1,1,1.5).setTranslation(0,0,1.3).setColor(0,0.8,0.2));
+          tree.add(new ComplexObject(cylinder1).setScaling(0.3,0.3,1).setColor(0.3,0.1,0));
+          world.add(new ComplexObject(tree).setScaling(3,3,3).setRotation(90,-1,0,0).setTranslation(-2,0.2,-5));
+
+     /*     // Add some random shapes around the periphery.
+
+          for (var angle = 0.0; angle < 2*Math.PI; angle += Math.PI / 10) {
+                var r;
+                switch (Math.floor(4*Math.random())) {
+                case 0:
+                   r = new ComplexObject(cube1).setScaling(0.5,1,0.5);
+                   break;
+                case 1:
+                   r = new ComplexObject(sphere1).setScaling(2,2,2);
+                   break;
+                case 2:
+                   r = new ComplexObject(cone1).setScaling(2,2,2).setRotation(90,-1,0,0);
+                   break;
+                default:
+                   r = new ComplexObject(cylinder1).setScaling(1,1,2).setRotation(90,-1,0,0);
+                }
+                var x = 14*Math.cos(angle);
+                var z = 14*Math.sin(angle);
+                world.add(new ComplexObject(r).setColor(Math.random()*0.7 + 0.3, Math.random()*0.7 + 0.3, Math.random()*0.7 + 0.3).setTranslation(x,0.5,z));
+          }
+     */
+          // Create a cart, consisting of a cube and four wheels.
+
+          wheel = new ComplexObject();
+          wheel.add(new ComplexObject( torus1 ).setScaling(2,2,2).setColor(0,0,1));
+          var spoke = new ComplexObject(cylinder1)
+                                    .setScaling(0.2,0.2,1.7)
+                                    .setRotation(90,-1,0,0)
+                                    .setColor(1,1,0);
+          wheel.add( spoke );
+          wheel.add( new ComplexObject(spoke).setRotation(60,0,0,1));
+          wheel.add( new ComplexObject(spoke).setRotation(-60,0,0,1));
+          cart = new ComplexObject();
+          cart.add(new ComplexObject(wheel).setTranslation(2,1,1));
+          cart.add(new ComplexObject(wheel).setTranslation(-2,1,1));
+          cart.add(new ComplexObject(wheel).setTranslation(2,1,-1));
+          cart.add(new ComplexObject(wheel).setTranslation(-2,1,-1));
+          cart.add(new ComplexObject(cube1)
+                         .setScaling(2.5,0.3,0.8)
+                         .setTranslation(0,1,0)
+                         .setColor(1,0,0));
+          cart = new ComplexObject(cart.setTranslation(0,-.5,11.5));
+          world.add(cart);
+
+          // Create a merry-go-round.  The "horses" on the merry-go-round are just
+          // cubes that go up and down.  There are two groups of horses; one group
+          // goes up while the other goes down.
+
+          var horse = new ComplexObject(cube1)
+                       .setScaling(1,0.5,0.5)
+                       .setTranslation(0,2.5,5)
+                       .setColor(0,1,0);
+          horse1 = new ComplexObject(horse);
+          horse2 = new ComplexObject(horse);
+          merryGoRound = new ComplexObject();
+          merryGoRound.add(new ComplexObject(cylinder1) // top of merry-go-round
+                           .setScaling(12,12,0.25)
+                           .setRotation(90,-1,0,0)
+                           .setTranslation(0,0.5,0)
+                           .setColor(.8,.8,1));
+          merryGoRound.add(new ComplexObject(cylinder1)  // bottom
+                            .setScaling(12,12,0.25)
+                            .setRotation(90,-1,0,0)
+                            .setTranslation(0,4.5,0)
+                            .setColor(.8,.8,.8));
+          var pole = new ComplexObject(cylinder1)
+                          .setColor(0,0,1)
+                          .setScaling(0.2,0.2,4.2)
+                          .setRotation(90,-1,0,0)
+                          .setTranslation(0,2.2,5);
+          for (var i = 0; i < 6; i++) {
+             merryGoRound.add(new ComplexObject(pole).setRotation(60*i,0,1,0));
+             merryGoRound.add(new ComplexObject( i % 2 == 0 ? horse1 : horse2 ).setRotation(60*i,0,1,0));
+          }
+          world.add(new ComplexObject(merryGoRound).setScaling(0.7,0.7,0.7).setTranslation(2,-0.5,4));
+
+
+    }
+
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      if (gl !== null) {
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
+      }
+      aspectRatio = canvas.width / canvas.height;
+    }
+
+    function initGL(canvas) {
+        try {
+            //gl = canvas.getContext("experimental-webgl");
+            gl = createWebGLContext("webGLcanvas");
+            gl.viewportWidth = canvas.width;
+            gl.viewportHeight = canvas.height;
+            aspectRatio = canvas.width / canvas.height;
+            var rttCanvas = document.getElementById('rttCanvas');
+            rttContext = rttCanvas.getContext('2d');
+
+           //untuk viewing
+           //gl = createWebGLContext("glcanvas");
+           //gl = createWebGLContext("webGLcanvas");
+
+           var vertexShaderSource = getElementText("vshader");
+           var fragmentShaderSource = getElementText("fshader");
+           prog = createProgram(gl,vertexShaderSource,fragmentShaderSource);
+           gl.useProgram(prog);
+           vertexAttributeLocation =  gl.getAttribLocation(prog, "vertexCoords");
+           normalAttributeLocation =  gl.getAttribLocation(prog, "normalCoords");
+           modelviewUniformLocation = gl.getUniformLocation(prog, "modelview");
+           projectionUniformLocation = gl.getUniformLocation(prog, "projection");
+           normalTransformUniformLocation = gl.getUniformLocation(prog, "normalTransform");
+           litUniformLocation =  gl.getUniformLocation(prog, "lit");
+           globalAmbientUniformLocation = gl.getUniformLocation(prog, "globalAmbient");
+           gl.enableVertexAttribArray(vertexAttributeLocation);
+           gl.enableVertexAttribArray(normalAttributeLocation);
+           materialUniformLocation = {
+              ambient: gl.getUniformLocation(prog, "material.ambient"),
+              diffuse: gl.getUniformLocation(prog, "material.diffuse"),
+              specular: gl.getUniformLocation(prog, "material.specular"),
+              emissive: gl.getUniformLocation(prog, "material.emissive"),
+              shininess: gl.getUniformLocation(prog, "material.shininess")
+           };
+           lightUniformLocation = [];
+           for (var i = 0; i < 8; i++) {
+              var light = {
+                 position: gl.getUniformLocation(prog, "light[" + i + "].position"),
+                 intensity: gl.getUniformLocation(prog, "light[" + i + "].intensity"),
+                 ambient: gl.getUniformLocation(prog, "light[" + i + "].ambient"),
+                 enabled: gl.getUniformLocation(prog, "light[" + i + "].enabled")
+              };
+              if (i == 0) {
+                 gl.uniform1i(light.enabled, true);
+                 gl.uniform3f(light.intensity, 1, 1, 1);
+              }
+              else {
+                 gl.uniform1i(light.enabled, false);
+                 gl.uniform3f(light.intensity, 0, 0, 0);
+              }
+              gl.uniform3f(light.ambient, 0, 0, 0);
+              gl.uniform4f(light.position, 0, 0, 1, 0)
+              lightUniformLocation.push(light);
+           }
+           gl.uniform3f(globalAmbientUniformLocation, 0.1, 0.1, 0.1);
+           gl.uniform3f(materialUniformLocation.ambient, 0.8, 0.8, 0.8);
+           gl.uniform3f(materialUniformLocation.diffuse, 0.8, 0.8, 0.8);
+           gl.uniform3f(materialUniformLocation.specular, 0.2, 0.2, 0.2);
+           gl.uniform3f(materialUniformLocation.emissive, 0, 0, 0);
+           gl.uniform1f(materialUniformLocation.shininess, 25);
+           gl.uniform1i(litUniformLocation, true);
+           gl.uniformMatrix4fv(projectionUniformLocation, false, projection );
+           gl.enable(gl.DEPTH_TEST);
+        } catch (e) {
+        }
+        if (!gl) {
+            alert("Could not initialise WebGL, sorry :-(" + e);
+        }
+
+       document.getElementById("light0Checkbox").checked = false;
+       document.getElementById("light1Checkbox").checked = false;
+       document.getElementById("light2Checkbox").checked = false;
+       document.getElementById("light3Checkbox").checked = false;
+       document.getElementById("animateCheckbox").checked = false;
+       document.getElementById("projectionCheckbox").checked = false;
+       //   gl.uniform3f(lightUniformLocation[0].intensity, 0.5, 0.5, 0.5);
+       gl.uniform4f(lightUniformLocation[1].position, 30, 30, 30, 1);
+       gl.uniform3f(lightUniformLocation[1].intensity, 0.5, 0, 0);
+       gl.uniform4f(lightUniformLocation[2].position, -30, 30, 30, 1);
+       gl.uniform3f(lightUniformLocation[2].intensity, 0, 0.5, 0);
+       gl.uniform4f(lightUniformLocation[3].position, 0, -30, 30, 1);
+       gl.uniform3f(lightUniformLocation[3].intensity, 0,0, 0.5);
+       torus1 = new BasicObject3D(new uvTorus(), gl, vertexAttributeLocation, normalAttributeLocation);
+       sphere1 = new BasicObject3D(new uvSphere(), gl, vertexAttributeLocation, normalAttributeLocation);
+       cube1 = new BasicObject3D(new cube(), gl, vertexAttributeLocation, normalAttributeLocation);
+       cylinder1 = new BasicObject3D(new uvCylinder(), gl, vertexAttributeLocation, normalAttributeLocation);
+       cone1 = new BasicObject3D(new uvCone(), gl, vertexAttributeLocation, normalAttributeLocation);
+       createWorld();
+       //draw();
+       drawScene();
+       rotator();
+       animator = new Animator(frame);
+
+    }
+
+    function updateTexture(text) {
+
+      rttContext.rect(0, 0, rttCanvas.width, rttCanvas.height);
+      rttContext.fillStyle = 'black';
+      rttContext.fill();
+
+      // ubah warna text ke-1
+      //rttContext.fillStyle = "white";
+      rttContext.fillStyle = "#F6821C";
+      rttContext.lineWidth = 1;
+      rttContext.strokeStyle = "#6B0000";
+      //rttContext.strokeStyle = "#FFFFFF";
+      rttContext.save();
+      rttContext.shadowColor = "#8B8B8B";
+      //rttContext.shadowColor = "#FFFFFF";
+      rttContext.shadowOffsetX = 0;
+      rttContext.shadowOffsetY = 0;
+      //rttContext.shadowBlur = 25;
+      rttContext.shadowBlur = 0;
+      rttContext.font = "bold 48pt Calibri";
+      rttContext.textAlign = "center";
+      rttContext.textBaseline = "middle";
+      var leftOffset = rttContext.canvas.width / 2;
+      var topOffset = rttContext.canvas.height / 2;
+      rttContext.fillText("Grafkom UB-22 :D", leftOffset, topOffset);
+      rttContext.font = "bold 16pt Calibri";
+      //rttContext.shadowColor = "#8B0000";
+      rttContext.shadowColor = "#FFFFFF";
+
+      // ubah warna text ke-2
+      rttContext.fillStyle = "#08ABD7";
+      rttContext.fillText("Oleh P. Imam, & Big Thanks to All great Module", leftOffset, topOffset + 100);
+      rttContext.restore();
+
+      handleTextureLoaded(rttCanvas, texture);
+    }
+
+    function handleTextureLoaded(image, texture) {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    function getShader(gl, id) {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript) {
+            return null;
+        }
+
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3) {
+                str += k.textContent;
+            }
+            k = k.nextSibling;
+        }
+
+        var shader;
+        if (shaderScript.type == "x-shader/x-fragment") {
+            shader = gl.createShader(gl.FRAGMENT_SHADER);
+        } else if (shaderScript.type == "x-shader/x-vertex") {
+            shader = gl.createShader(gl.VERTEX_SHADER);
+        } else {
+            return null;
+        }
+
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+
+        return shader;
+    }
+
+
+    var shaderProgram;
+    var shaderProgramPointSprite;
+
+    function initShaders2() {
+        var fragmentShader = getShader(gl, "shader-fs");
+        var vertexShader = getShader(gl, "shader-vs");
+
+        shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertexShader);
+        gl.attachShader(shaderProgram, fragmentShader);
+        gl.linkProgram(shaderProgram);
+
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            alert("Could not initialise shaders");
+        }
+
+        gl.useProgram(shaderProgram);
+
+        shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+        shaderProgram.vertexTextureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(shaderProgram.vertexTextureCoordAttribute);
+
+        shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+        shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+    }
+
+
+    var mvMatrix = mat4.create();
+    //var mvMatrix = glMatrix.mat4.create();
+    var pMatrix = mat4.create();
+    //var pMatrix = glMatrix.mat4.create();
+
+
+    function setMatrixUniforms() {
+        gl.useProgram(shaderProgram);
+        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+        gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+    }
+
+    function webGLStart() {
+        canvas = document.getElementById("webGLcanvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initGL(canvas);
+        //initShaders();
+
+        //texture = gl.createTexture();
+        //updateTexture();
+
+        // vbo = new vertexBufferObject();
+        // vbo.setVertices([0,0,0, 0,1,0, 1,0,0, 0,1,0, 1,1,0, 1,0,0], shaderProgram.vertexPositionAttribute);
+        // vbo.setTextureCoordinates([0,0, 0,1, 1,0, 0,1, 1,1, 1,0], shaderProgram.vertexTextureCoordAttribute, 2);
+
+        //set warna background
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+        startTime = window.webkitAnimationStartTime ||  window.mozAnimationStartTime ||  new Date().getTime();
+        lastTimeStamp = startTime;
+        lastFpsTimeStamp = startTime;
+
+        //firstRenderInterval = setInterval(render, 150);
+        // drawScene();
+    }
+
+    function drawScene() {
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // glMatrix.mat4.ortho(pMatrix, -0.5, 0.5, 0.5, -0.5, -1, 1);
+        // glMatrix.mat4.identity(mvMatrix);
+        // glMatrix.mat4.translate(mvMatrix, mvMatrix, [Math.sin(rad)*0.05-0.5, Math.cos(rad)*0.05-0.5, 0]);
+
+        //setMatrixUniforms();
+
+        //gl.useProgram(shaderProgram);
+        // gl.bindTexture(gl.TEXTURE_2D, texture);
+        // vbo.render(gl.TRIANGLES);
+
+        // Ref:
+    	// https://stackoverflow.com/questions/26618367/draw-multiple-shapes-in-webgl
+    	// https://stackoverflow.com/questions/28614956/webgl-adding-multiple-objects-to-one-canvas
+    	// https://gist.github.com/Carla-de-Beer/10ad7c7309fad48d94df
+
+		//  Load shaders and initialize attribute buffers
+		//program = initShaders( gl, "vertex-shader", "fragment-shader" );
+		//program1 = initShaders( gl, "vertex-shader", "fragment-shader" );
+
+		gl.clearColor(0,0,0.3,1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        modelview = mat4.lookAt( [0,0,40], [0,0,0], [0,1,0] );
+        mat4.rotateX(modelview, rotX);
+        mat4.rotateY(modelview, rotY);
+        gl.uniformMatrix4fv(modelviewUniformLocation, false, modelview );
+        gl.uniformMatrix3fv(normalTransformUniformLocation, false, mat3.transpose(mat4.toInverseMat3(modelview)) );
+        world.drawObjects(modelview, {ambientAndDiffuse: color, specular:[0.2,0.2,0.2], emissive: [0,0,0]});
+
+
+
+
+    }
+
+    function render() {
+      clearInterval(firstRenderInterval);
+
+      time = window.webkitAnimationStartTime || window.mozAnimationStartTime || new Date().getTime();
+
+      if(time - lastFpsTimeStamp >= 1000) {
+          framesPerSecond = frameCount;
+          frameCount = 0;
+          lastFpsTimeStamp = time;
+          hudScope.$apply('fps = "' + framesPerSecond + ' fps"');
+      }
+
+      //requestAnimationFrame(render);
+      //drawScene();
+
+      ++frameCount;
+
+      rad += (time - lastTimeStamp) * 0.0025;
+      if (rad > 2*Math.PI) {
+        rad -= 2*Math.PI;
+      }
+
+      lastTimeStamp = time;
+    }
+
+    angular.module("hud", []).
+    controller("hudController", function($scope){
+      $scope.fps = "0 fps";
+    });
+    angular.bootstrap(document.getElementById("hud"), ["hud"]);
+    hudScope = angular.element(document.getElementById("hud")).scope();
+
+    //webGLStart();
+
+    //window.addEventListener('resize', resizeCanvas, false);
+    window.addEventListener('resize', resizeCanvas, true);
+
+
+
+    function frame(time) {
+      wheel.setRotation(-time/10, 0, 0, 1); // make the car wheels rotate
+      cart.setRotation(time/40, 0,1,0);  // make the car go around the road
+      merryGoRound.setRotation(time/20, 0, 1, 0);  // make the merry-go-round turn
+      var frameNumber = Math.floor(time/50);
+      var horseFrame = frameNumber % 60;  // the remaining stuff makes the horses go up and down
+      if (horseFrame >= 30)
+         horseFrame = 60-horseFrame;
+      var horseOffset = (horseFrame - 15) / 30.0;
+      horse1.setTranslation(0, horseOffset, 0);
+      horse2.setTranslation(0, -horseOffset, 0);
+      //draw();
+      drawScene();
+    }
+
+    function rotator() {
+    var prevx,prevy;
+    var canvas = gl.canvas;
+    var dragging = false;
+    canvas.addEventListener("mousedown", function(evt) {
+        if (dragging)
+           return;
+        prevx = evt.clientX;
+        prevy = evt.clientY;
+        dragging = true;
+    }, false);
+    document.addEventListener("mouseup", function(evt) {
+        dragging = false;
+    }, false);
+    document.addEventListener("mousemove", function(evt) {
+        if (!dragging)
+           return;
+        var x = evt.clientX;
+        var y = evt.clientY;
+        rotY += (x-prevx)/200;
+        rotX += (y-prevy)/200;
+        prevx = x;
+        prevy = y;
+        //draw();
+        drawScene();
+    }, false);
+    }
+
+
+    function doLightCheckbox(lightNum) {
+       var enabled = document.getElementById("light" + lightNum + "Checkbox").checked;
+       gl.uniform1i(lightUniformLocation[lightNum].enabled, enabled);
+       //draw();
+       drawScene();
+    }
+
+    function doAnimateCheckbox() {
+       var on = document.getElementById("animateCheckbox").checked;
+       animator.setAnimating(on);
+    }
+
+    function doProjectionCheckbox() {
+       if (document.getElementById("projectionCheckbox").checked)
+          // untuk glFrustum(left, right, bottom, top, nearVal, farVal)
+    	  // juga dapat digunakan sebagai Perspective Projection
+          projection = mat4.frustum(-10,10,-10,10,20,60);
+       else
+    	  // untuk glOrtho(xmin, xmax, ymin, ymax, zmin, zmax)
+    	  // sebagai Non-Perspective Projection atau jauh dekat sama ketika dilihat
+          projection = mat4.ortho(-20,20,-20,20,20,60);
+       gl.uniformMatrix4fv(projectionUniformLocation, false, projection);
+       //draw();
+       drawScene();
+    }
+
+    //------------------------------------------------------------------------
+
+  </script>
+
+  <h2>Simple World Viewer</h2>
+
+    <noscript><hr><h3>This page requires Javascript and a web browser that supports WebGL</h3><hr></noscript>
+
+    <p id="message" style="font-weight:bold"><span style="color:red">Drag to rotate the world</span></p>
+
+
+    <div style="float: left; width: 550px">
+
+    <canvas id="glcanvas" style="background-color:blue" width="500" height="500"></canvas>
+
+    </div>
+
+    <div style="float:left;">
+
+    <!--<p><input type="checkbox" id="animateCheckbox" onchange="doAnimateCheckbox()" checked="checked"> <label for="animateCheckbox"><b>Animate</b>-->
+    <p><input type="checkbox" id="animateCheckbox" onchange="doAnimateCheckbox()"> <label for="animateCheckbox"><b>Animate</b>
+    <br><br>
+
+
+    <!--</label></p><p><input type="checkbox" id="projectionCheckbox" onchange="doProjectionCheckbox()" checked="checked"> <label for="projectionCheckbox"><b>Perspective Projection</b>-->
+    </label></p><p><input type="checkbox" id="projectionCheckbox" onchange="doProjectionCheckbox()"> <label for="projectionCheckbox"><b>Perspective Projection</b>
+    <br><br>
+
+
+
+    <!--</label></p><p><input type="checkbox" id="light0Checkbox" onchange="doLightCheckbox(0)" checked="checked"> <label for="light0Checkbox"><b>Enable Light 0 (White)</b></label></p>-->
+    </label></p><p><input type="checkbox" id="light0Checkbox" onchange="doLightCheckbox(0)"> <label for="light0Checkbox"><b>Enable Light 0 (White)</b></label></p>
+    <p><input type="checkbox" id="light1Checkbox" onchange="doLightCheckbox(1)"> <label for="light1Checkbox"><b>Enable Light 1 (Red)</b></label></p>
+    <p><input type="checkbox" id="light2Checkbox" onchange="doLightCheckbox(2)"> <label for="light2Checkbox"><b>Enable Light 2 (Green)</b></label></p>
+    <p><input type="checkbox" id="light3Checkbox" onchange="doLightCheckbox(3)"> <label for="light3Checkbox"><b>Enable Light 3 (Blue)</b></label></p>
+    <br><br>
+
+    <!--<p><button onclick="rotX = rotY = 0; draw()">Reset Rotation</button></p>-->
+    <p><button onclick="rotX = rotY = 0; drawScene()">Reset Rotation</button></p>
+
+
+    </div>
+
+{% endblock content %}

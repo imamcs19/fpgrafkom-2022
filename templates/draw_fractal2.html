@@ -1,0 +1,477 @@
+{% extends "extends/base.html" %}
+{% block title %}
+    <title>Web Data App</title>
+{% endblock title %}
+{{ self.title() }}
+    Home
+{{ self.title() }}
+<button onclick="window.location.href='/'" class="btn btn-outline btn-rounded btn-info">
+    <i class="ti-arrow-left m-l-5"></i>
+    <span>Back Home</span>
+</button> Project 1
+
+{{ self.title() }}
+    Project 1
+
+{% block content %}
+
+  <!--- Cara memanggil Lib. helper WebGL dari file *.js                                      -->
+  <!--                                                                                       -->
+  <!--Ref.                                                                                   -->
+  <!-- [0] https://github.com/zbendefy/webgl-mandelbrot/blob/master/index.html               -->
+  <!-- [1] https://math.hws.edu/eck/js/mandelbrot/MB.html?ex=examples%2fdragon.xml           -->
+  <!--                                                                                       -->
+  <!-- Remodified by Imam Cholissodin | Filkom UB                                            -->
+  <!-- Tgl 20 Juni – 15 Juli 2022                                                            -->
+  <!------------------------------------------------------------------------------------------->
+
+  <!--<link rel="stylesheet" href="{{ url_for('static', filename = 'css/cubemap/demo.css') }}">-->
+
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap2/demo-core.js') }}"></script>-->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap2/three.js') }}"></script>-->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap2/GLTFLoader.js') }}"></script>-->
+  <!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_texturemap2/OrbitControls.js') }}"></script>-->
+
+<!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_fractal/BigDecimal-all-last.js') }}"></script>-->
+<!--<script type="text/javascript" src="{{ url_for('static', filename = 'js/mylib_fractal/mandelbrot-worker.js') }}"></script>-->
+<!--<script src="Mandelbrot%20Viewer_files/BigDecimal-all-last.js"></script>-->
+
+<style>
+	/*html, body {*/
+	/*	background-color: #3f0c4d;*/
+ /*       color: black;*/
+	/*	margin: 0px;*/
+	/*	overflow: auto;*/
+	/*	width: 100%;*/
+	/*	height: 100%;*/
+	/*}*/
+    #controls{
+ 		white-space: nowrap;
+		font-weight: bold;
+		font-size: 112%;
+		bottom: 0;
+    }
+	#divPos{
+		white-space: nowrap;
+	}
+	.mousepos{
+		font-size: 103%;
+		color: #C4A77D;
+	}
+	#insightinput{
+		width: 200px;
+	}
+	#glview {
+		width: 100%;
+        height: calc(100% - 40px);
+		height: -o-calc(100% - 40px);  /*opera*/
+        height: -webkit-calc(100% - 40px); /* google, safari */
+        height: -moz-calc(100% - 40px); /* firefox */
+	}
+</style>
+
+<script>
+	function handleMouseEvent(tevent)
+	{
+		expectClick=false;
+		mousePosX=tevent.clientX/parameters.screenWidth;
+		mousePosY=tevent.clientY/parameters.screenHeight;
+
+		if(isDragging) {
+			dragX+=-0.002*zoom*(tevent.clientX-lastClientX);
+			dragY+=0.002*zoom*(tevent.clientY-lastClientY);
+		}
+
+		lastClientX=tevent.clientX;
+		lastClientY=tevent.clientY;
+	}
+	function handleMouseClick(tevent)
+	{
+		if ( expectClick )
+		{
+			mousePosX=tevent.clientX/parameters.screenWidth;
+			mousePosY=tevent.clientY/parameters.screenHeight;
+
+			var aspectRatio = parameters.screenWidth / parameters.screenHeight;
+			document.getElementById("divFractalPosX").innerHTML = dragX + (-1+2*(mousePosX)) * aspectRatio * zoom;
+			document.getElementById("divFractalPosY").innerHTML = dragY + (-1+2*(1.0-mousePosY)) * zoom;
+			document.getElementById("divFirstClick").innerHTML = "";
+			document.getElementById("divPos").hidden = false;
+		}
+		expectClick=false;
+	}
+
+	function onChangeInsight(self)
+	{
+		insightSize=0.01*self.value;
+		document.getElementById('insightdisplay').value = self.value == 0 ? 'Off' : self.value;
+	}
+
+	function onChangeJuliamap(cb) {
+		discSize = cb.checked ? 100 : 0.5;
+	}
+</script>
+
+<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.deltaY>0?1.25:0.8), 10);"
+onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true; expectClick=true;"
+onmouseout="isDragging=false; "
+onmouseup="isDragging=false; handleMouseClick(event);"
+onmousemove="handleMouseEvent(event);"
+onclick="handleMouseClick(event);"
+
+ontouchstart="var tevent=event.touches[0]; lastClientX=tevent.clientX; lastClientY=tevent.clientY; isDragging=true"
+ontouchend="isDragging=false"
+ontouchmove="handleMouseEvent(event.touches[0]);"
+></canvas>
+
+<!--<canvas id="maincanvas" width="500" height="380"></canvas>-->
+
+<span id="controls">
+	&nbsp;&nbsp;&nbsp; Iterations <input id="sliderIterations" oninput="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input>
+	&nbsp;&nbsp;|&nbsp;&nbsp; Julia size&nbsp; <input id="insightinput" oninput="onChangeInsight(this)" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output>
+	&nbsp;&nbsp;|&nbsp;&nbsp; <label><input id="julia_cb" type='checkbox' onclick='onChangeJuliamap(this);'>Show Julia only</label>
+	&nbsp;&nbsp;|&nbsp;&nbsp; Last position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span>&nbsp;&nbsp; y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
+	<span id="divFirstClick" >Click to set position!</span>
+</span>
+
+<script id="vs" type="x-shader/vertex">
+
+	attribute vec3 position;
+
+	void main() {
+		gl_Position = vec4( position, 1.0 );
+	}
+
+</script>
+
+<script id="fs" type="x-shader/fragment">
+
+	uniform float time;
+	uniform float zoom;
+	uniform float u_insightsize;
+	uniform float insightDiscSize;
+	uniform vec2 resolution;
+	uniform vec2 mousePos;
+	uniform vec2 offset;
+	uniform vec2 juliapos;
+	uniform int iterations;
+    uniform int fractalMode;
+
+    float GetJulia(vec2 pos, float zoom, vec2 offset, vec2 juliaPos)
+    {
+        vec2 C = juliaPos;
+        vec2 Zn = offset + pos * zoom;
+
+        for( int i = 0; i < 1000; ++i)
+        {
+            if (i >= iterations) break; //workaround that dynamic iteration count can't be used
+
+			vec2 xy2 = Zn * Zn;
+            if (xy2.x + xy2.y > 4.0)
+            {
+                return float(i+1) / float(iterations+1);
+            }
+
+            Zn.y = (Zn.y * Zn.x * 2.0) + C.y;
+            Zn.x = (xy2.x - xy2.y) + C.x;
+        }
+        return 0.0;
+    }
+
+    float GetMandelbrot(vec2 pos, float zoom, vec2 offset)
+    {
+		return GetJulia(vec2(0.0), 0.0, vec2(0.0), offset + pos * zoom);
+	}
+
+	void main( void ) {
+        float aspectRatio = resolution.x / resolution.y;
+		vec2 position = - 1.0 + 2.0 * gl_FragCoord.xy / resolution.xy;
+        position.x *= aspectRatio;
+
+        //gl_FragColor = vec4( position.x*0.5+0.5, position.y*0.5+0.5, 0.0, 1.0 ); return;
+
+        if ( fractalMode == 0 ) // mandelbrot
+        {
+            float scale = GetMandelbrot(position, zoom, offset);
+            if ( scale == 0.0)
+                gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
+            else
+                gl_FragColor = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
+
+			float discdist = length(mousePos-position);
+			if ( discdist < insightDiscSize && u_insightsize != 0.0 )
+			{
+				float insightsize=u_insightsize*zoom;
+
+				float lerpFactor = (discdist*discdist)/(insightDiscSize*insightDiscSize);
+
+				vec2 Zn=offset + vec2(position.x, position.y)*zoom;
+				vec2 centerpos = floor(Zn/insightsize)*insightsize + vec2(insightsize*0.5, insightsize*0.5);
+				vec2 samplepos = mod(Zn, insightsize);
+				float scale = GetJulia(samplepos/(insightsize*0.5)-1.0, 1.4, vec2(0.0,0.0), centerpos);
+				//vec4 color = vec4(samplepos.x*20.0-1.0,samplepos.y*20.0-1.0,0.0,1.0);
+				vec4 color = vec4(1.0,0.0,0.0,1.0);
+				if ( scale == 0.0)
+					color = vec4( 0.0, 0.0, 0.0, 1.0 );
+				else
+					color = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
+
+				gl_FragColor = mix(color, gl_FragColor, clamp(lerpFactor,0.0,1.0));
+			}
+        }
+        else if ( fractalMode == 1) // julia
+        {
+            float scale = GetJulia(position, zoom, offset, juliapos);
+            if ( scale == 0.0)
+                gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
+            else
+                gl_FragColor = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
+        }
+	}
+
+</script>
+
+<script>
+
+	/**
+	 * Provides requestAnimationFrame in a cross browser way.
+	 * paulirish.com/2011/requestanimationframe-for-smart-animating/
+	 */
+	window.requestAnimationFrame = window.requestAnimationFrame || ( function() {
+		return  window.webkitRequestAnimationFrame ||
+		        window.mozRequestAnimationFrame ||
+		        window.oRequestAnimationFrame ||
+		        window.msRequestAnimationFrame ||
+		        function(  callback, element ) {
+			        window.setTimeout( callback, 1000 / 60 );
+		        };
+	})();
+
+	var canvas,
+	    gl,
+	    buffer,
+	    vertex_shader, fragment_shader,
+	    currentProgram,
+	    vertex_position,
+	    timeLocation,
+		insightLocation,
+		discSizeLocation,
+	    resolutionLocation,
+	    mouseLocation,
+	    zoomLocation,
+        iterationLocation,
+        fractalModeLocation,
+        juliaPosLocation,
+	    offsetLocation,
+	    parameters = {  start_time  : new Date().getTime(),
+	                    time        : 0,
+	                    screenWidth : 0,
+	                    screenHeight: 0 };
+
+	init();
+	animate();
+
+	function init() {
+
+        function preventBehavior(e) {
+            e.preventDefault();
+        };
+
+        document.addEventListener("touchmove", preventBehavior, false);
+
+		vertex_shader = document.getElementById('vs').textContent;
+		fragment_shader = document.getElementById('fs').textContent;
+
+        isDragging = false;
+        dragX = 0.0;
+        dragY = 0.0;
+        zoom = 2.0;
+        lastClientX=0;
+        lastClientY=0;
+        juliaPosX=0;
+        juliaPosY=0;
+        mousePosX=0;
+        mousePosY=0;
+        iterations=100;
+        fractalMode = 0;
+		insightSize=0.05;
+		discSize=0.5;
+		expectClick=false;
+
+		canvas = document.querySelector( 'canvas' );
+
+		// Initialise WebGL
+
+		try {
+
+			gl = canvas.getContext( 'experimental-webgl' );
+
+		} catch( error ) { }
+
+		if ( !gl ) {
+
+			throw "cannot create webgl context";
+
+		}
+
+		// Create Vertex buffer (2 triangles)
+
+		buffer = gl.createBuffer();
+		gl.bindBuffer( gl.ARRAY_BUFFER, buffer );
+		gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ - 1.0, - 1.0, 1.0, - 1.0, - 1.0, 1.0, 1.0, - 1.0, 1.0, 1.0, - 1.0, 1.0 ] ), gl.STATIC_DRAW );
+
+		// Create Program
+
+		currentProgram = createProgram( vertex_shader, fragment_shader );
+		timeLocation = gl.getUniformLocation( currentProgram, 'time' );
+		resolutionLocation = gl.getUniformLocation( currentProgram, 'resolution' );
+		insightLocation = gl.getUniformLocation( currentProgram, 'u_insightsize' );
+		discSizeLocation = gl.getUniformLocation( currentProgram, 'insightDiscSize' );
+		mouseLocation = gl.getUniformLocation( currentProgram, 'mousePos' );
+		zoomLocation = gl.getUniformLocation( currentProgram, 'zoom' );
+		offsetLocation = gl.getUniformLocation( currentProgram, 'offset' );
+		fractalModeLocation = gl.getUniformLocation( currentProgram, 'fractalMode' );
+		iterationLocation = gl.getUniformLocation( currentProgram, 'iterations' );
+        juliaPosLocation = gl.getUniformLocation( currentProgram, 'juliapos' );
+
+	}
+
+	function createProgram( vertex, fragment ) {
+
+		var program = gl.createProgram();
+
+		var vs = createShader( vertex, gl.VERTEX_SHADER );
+		var fs = createShader( '#ifdef GL_ES\nprecision highp float;\n#endif\n\n' + fragment, gl.FRAGMENT_SHADER );
+
+		if ( vs == null || fs == null ) return null;
+
+		gl.attachShader( program, vs );
+		gl.attachShader( program, fs );
+
+		gl.deleteShader( vs );
+		gl.deleteShader( fs );
+
+		gl.linkProgram( program );
+
+		if ( !gl.getProgramParameter( program, gl.LINK_STATUS ) ) {
+
+			alert( "ERROR:\n" +
+			"VALIDATE_STATUS: " + gl.getProgramParameter( program, gl.VALIDATE_STATUS ) + "\n" +
+			"ERROR: " + gl.getError() + "\n\n" +
+			"- Vertex Shader -\n" + vertex + "\n\n" +
+			"- Fragment Shader -\n" + fragment );
+
+			return null;
+
+		}
+
+		return program;
+
+	}
+
+	function createShader( src, type ) {
+
+		var shader = gl.createShader( type );
+
+		gl.shaderSource( shader, src );
+		gl.compileShader( shader );
+
+		if ( !gl.getShaderParameter( shader, gl.COMPILE_STATUS ) ) {
+
+			alert( ( type == gl.VERTEX_SHADER ? "VERTEX" : "FRAGMENT" ) + " SHADER:\n" + gl.getShaderInfoLog( shader ) );
+			return null;
+
+		}
+
+		return shader;
+
+	}
+
+	function resizeCanvas( event ) {
+
+		if ( canvas.width != canvas.clientWidth ||
+			 canvas.height != canvas.clientHeight ) {
+			canvas.width = canvas.clientWidth;
+			canvas.height = canvas.clientHeight;
+			parameters.screenWidth = canvas.width;
+			parameters.screenHeight = canvas.height;
+			gl.viewport( 0, 0, canvas.width, canvas.height );
+		}
+
+	}
+
+	function animate() {
+
+		resizeCanvas();
+		render();
+		requestAnimationFrame( animate );
+
+	}
+
+	function render() {
+
+		if ( !currentProgram ) return;
+
+		parameters.time = new Date().getTime() - parameters.start_time;
+
+		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+		// Load program into GPU
+
+		gl.useProgram( currentProgram );
+
+		// Set values to program variables
+
+		gl.uniform1f( timeLocation, parameters.time / 1000 );
+		gl.uniform1f( insightLocation, insightSize );
+		gl.uniform1f( discSizeLocation, discSize );
+		gl.uniform2f( resolutionLocation, parameters.screenWidth, parameters.screenHeight );
+		gl.uniform1f( zoomLocation, zoom );
+		gl.uniform1i( iterationLocation, iterations );
+        gl.uniform2f( offsetLocation, dragX, dragY );
+        gl.uniform2f( juliaPosLocation, juliaPosX, juliaPosY );
+        gl.uniform1i( fractalModeLocation, fractalMode );
+        gl.uniform2f( mouseLocation, (mousePosX * 2 - 1)*(parameters.screenWidth / parameters.screenHeight), mousePosY * -2 + 1 );
+
+		// Render geometry
+
+		gl.bindBuffer( gl.ARRAY_BUFFER, buffer );
+		gl.vertexAttribPointer( vertex_position, 2, gl.FLOAT, false, 0, 0 );
+		gl.enableVertexAttribArray( vertex_position );
+		gl.drawArrays( gl.TRIANGLES, 0, 6 );
+		gl.disableVertexAttribArray( vertex_position );
+
+	}
+
+</script>
+
+<script>
+ 	const queryString = window.location.search;
+	const urlParams = new URLSearchParams(queryString);
+
+	if(urlParams.has('julia_mode'))
+	{
+		const is_julia_mode = urlParams.get('julia_mode') != 0;
+		let checkbox = document.getElementById("julia_cb");
+		checkbox.checked = is_julia_mode;
+		onChangeJuliamap(checkbox);
+	}
+
+	if(urlParams.has('julia_size'))
+	{
+		const insightsize = parseInt(urlParams.get('julia_size'));
+		let slider = document.getElementById("insightinput");
+		slider.value = insightsize;
+		onChangeInsight(slider);
+	}
+
+	if(urlParams.has('iterations'))
+	{
+		const iteration_count = parseInt(urlParams.get('iterations'));
+		let slider = document.getElementById("sliderIterations");
+		slider.value = iteration_count;
+		iterations = iteration_count*iteration_count;
+	}
+</script>
+
+{% endblock content %}

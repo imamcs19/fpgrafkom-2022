@@ -8,8 +8,42 @@
 	var domain = null;
 	var objectiveFunction;
 	var samples = [];
+	var utk_zoom_in = 15;
+
+	function degrees_to_radians(degrees) {
+        return degrees * (Math.PI / 180);
+    }
+
+    function radians_to_degrees(radians) {
+        return radians/(Math.PI / 180);
+    }
 
 	var fundom = [{
+	    // menambahkan var utk_zoom_in 15 kali lipat agar view-nya nampak jelas
+	    		fun: function (x) { return utk_zoom_in * (Math.abs(Math.sin(x[0] * 2)) + 2 * Math.exp(-Math.pow(x[0], 10)) * Math.cos(x[0] * 2)); },
+		domain: [new pso.Interval(-4.00, 4.00)]
+	}, {
+	    //
+	    // optional:
+		fun: function (x) { return 3*Math.pow((1-x[0]),2)*Math.exp(-Math.pow(x[0],2) - Math.pow(x[1]+1,2) -
+		10*(x[0]/5 - Math.pow(x[0],3) - Math.pow(x[1],5)) * Math.exp(-Math.pow(x[0],2) - Math.pow(x[1],2)) -
+		(1/3)*Math.exp(-Math.pow(x[0]+1,2) -Math.pow(x[1],2))); },
+		domain: [new pso.Interval(-5.0, 5.12)]
+
+		//alternatif solusi:
+		//1. membuat gridmap (x,y)
+		//2. masukkan gridmap ke dalam f(x,y)
+		//3. buffer nilai x,y,z
+		// *lakukan langkah 1-3 dgn python / js
+		//4. hasil dari langkah ke-3, dikirimkan ke webGL
+		//5. set setiap vertex atau kumpulkannya dgn GL_POINTS atau lainnya
+		//
+		//6. PSO, cukup generate bbrp vertex yaitu sebanyak populasi yg diinginkan
+		//7. lalu titik partikel PSO trsbt buat misal dgn GL_POINTS
+		//8. animasikan titik partikel tersebut
+		//9. selesai
+
+	}, {
 		fun: function (x) { return Math.cos(Math.PI * 2 * x[0]) * 5 - Math.pow(x[0], 2); },
 		domain: [new pso.Interval(-5.12, 5.12)]
 	}, {
